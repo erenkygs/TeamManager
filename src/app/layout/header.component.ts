@@ -34,6 +34,7 @@ import { interval, Subscription } from 'rxjs';
             Hepsini okundu yap
           </button>
         </div>
+        
 
         <div *ngIf="notiLoading" class="muted small">Yükleniyor…</div>
 
@@ -50,12 +51,18 @@ import { interval, Subscription } from 'rxjs';
                 <div class="noti-item-title">{{ n.title }}</div>
                 <div class="muted small" style="margin-top:4px;">{{ n.message }}</div>
               </div>
-
               <div *ngIf="!n.isRead" class="dot"></div>
             </div>
 
             <div class="muted small" style="margin-top:6px;">
               {{ n.createdAt | date:'yyyy-MM-dd HH:mm' }}
+
+               <button class="noti-del"
+                      type="button"
+                      title="Sil"
+                      (click)="deleteNoti(n, $event)">
+                  🗑
+                </button>
             </div>
           </div>
         </div>
@@ -173,6 +180,33 @@ import { interval, Subscription } from 'rxjs';
   border-radius:999px;
   background: rgba(125,255,179,.85);
   margin-top:4px;
+  flex:0 0 auto;
+}
+.noti-del{
+  appearance:none;
+  -webkit-appearance:none;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  opacity:.75;
+  line-height:1;
+}
+.noti-del:hover{
+  opacity:1;
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.18);
+}
+.noti-actions{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
   flex:0 0 auto;
 }
 `]
@@ -299,6 +333,25 @@ export class HeaderComponent implements OnDestroy {
         this.cd.detectChanges();
       },
       error: () => { /* sessiz */ }
+    });
+  }
+
+  deleteNoti(n: NotificationItem, ev: MouseEvent) {
+    ev.stopPropagation();
+
+    if (!confirm('Bildirimi silmek istiyor musun?')) return;
+
+    this.noti.delete(n.id).subscribe({
+      next: () => {
+        this.notifications = (this.notifications ?? []).filter(x => x.id !== n.id);
+
+        if (!n.isRead && this.unreadCount > 0) {
+          this.unreadCount--;
+        }
+
+        this.cd.detectChanges();
+      },
+      error: () => { }
     });
   }
 

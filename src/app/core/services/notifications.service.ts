@@ -30,4 +30,8 @@ export class NotificationsService {
     readAll() {
         return this.http.put(`${environment.apiUrl}/api/notifications/read-all`, null, { responseType: 'text' });
     }
+
+    delete(id: number) {
+        return this.http.delete(`${environment.apiUrl}/api/notifications/${id}`);
+    }
 }
