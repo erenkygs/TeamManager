@@ -35,7 +35,6 @@ type Project = {
     <div class="card" *ngFor="let p of projects" style="padding:16px;display:grid;gap:10px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
         <div style="font-weight:800;font-size:16px;">{{ p.name }}</div>
-        <div class="muted small">#{{ p.id }}</div>
       </div>
 
       <div class="muted" style="min-height:36px;">
