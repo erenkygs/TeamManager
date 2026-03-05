@@ -55,16 +55,6 @@ type DashboardSummary = {
         <div class="muted small">Geciken</div>
         <div style="font-size:28px;font-weight:800;margin-top:6px;">{{ d.overdueTasks }}</div>
       </div>
-
-      <div class="card" style="padding:14px;">
-        <div class="muted small">Toplam Proje</div>
-        <div style="font-size:28px;font-weight:800;margin-top:6px;">{{ d.totalProjects }}</div>
-      </div>
-
-      <div class="card" style="padding:14px;">
-        <div class="muted small">Aktif Projeler</div>
-        <div style="font-size:28px;font-weight:800;margin-top:6px;">{{ d.activeProjects }}</div>
-      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
@@ -75,7 +65,7 @@ type DashboardSummary = {
           <div *ngFor="let x of d.completedLast7Days"
                style="display:grid;grid-template-columns:110px 1fr 36px;gap:10px;align-items:center;">
             <div class="muted small">{{ x.date }}</div>
-            <div style="height:10px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden;">
+            <div style="height:12px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden;">
               <div [style.width.%]="barWidth(x.completed)"
                    style="height:100%;background:linear-gradient(135deg,var(--primary),var(--primary-2));border-radius:999px;"></div>
             </div>
@@ -87,34 +77,54 @@ type DashboardSummary = {
         </ng-template>
       </div>
       <div class="card" style="padding:14px;">
-        <div style="font-weight:800;margin-bottom:12px;">Liderlik Tablosu (İlk 10)</div>
 
-        <table *ngIf="d.leaderboard?.length; else noLb" style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th class="muted small" style="text-align:left;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.10);">#</th>
-              <th class="muted small" style="text-align:left;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.10);">Kullanıcı</th>
-              <th class="muted small" style="text-align:right;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.10);">Tamamlanan</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of d.leaderboard; let i = index">
-              <td style="padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.06);">{{ i + 1 }}</td>
-              <td style="padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.06);">
-                <div style="font-weight:700;">{{ u.name || u.email || ('User ' + u.userId) }}</div>
-                <div class="muted small" *ngIf="u.email">{{ u.email }}</div>
-              </td>
-              <td style="padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.06);text-align:right;font-weight:800;">
-                {{ u.completed }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;">
+    <div style="font-weight:800;">Liderlik Tablosu (İlk 10)</div>
 
-        <ng-template #noLb>
-          <div class="muted">Henüz Liderlik Tablosu verisi yok.</div>
-        </ng-template>
-      </div>
+    <div class="muted small" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end;">
+      <span>Toplam Proje: <b>{{ d.totalProjects }}</b></span>
+      <span>Aktif: <b>{{ d.activeProjects }}</b></span>
+    </div>
+  </div>
+
+  <table *ngIf="d.leaderboard?.length; else noLb" style="width:100%;border-collapse:collapse;">
+    <thead>
+      <tr>
+        <th class="muted small"
+            style="text-align:left;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.10);">#</th>
+        <th class="muted small"
+            style="text-align:left;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.10);">Kullanıcı</th>
+        <th class="muted small"
+            style="text-align:right;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.10);">Tamamlanan</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let u of d.leaderboard; let i = index">
+        <td style="padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.06);">
+          <span *ngIf="i === 0">🥇</span>
+          <span *ngIf="i === 1">🥈</span>
+          <span *ngIf="i === 2">🥉</span>
+          {{ i + 1 }}
+        </td>
+
+        <td style="padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.06);">
+          <div style="font-weight:700;">{{ u.name || u.email || ('User ' + u.userId) }}</div>
+          <div class="muted small" *ngIf="u.email">{{ u.email }}</div>
+        </td>
+
+        <td style="padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.06);text-align:right;font-weight:800;">
+          {{ u.completed }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <ng-template #noLb>
+    <div class="muted">Henüz Liderlik Tablosu verisi yok.</div>
+  </ng-template>
+
+</div>
     </div>
   </ng-container>
 </div>
