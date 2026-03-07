@@ -31,7 +31,7 @@ type LoginResponse = { token: string };
                type="email"
                name="email"
                [(ngModel)]="email"
-               placeholder="ornek@mail.com"
+               placeholder="ornek@gmail.com"
                autocomplete="email"
                required />
       </div>
@@ -61,6 +61,10 @@ type LoginResponse = { token: string };
 
       <div class="muted small footer">
         Devam ederek kullanım koşullarını kabul etmiş olursun.
+      </div>
+
+      <div class="login-version">
+      Helivex v{{ environment.version }}
       </div>
     </form>
   </div>
@@ -194,6 +198,14 @@ label{
   transition:.15s;
 }
 
+.login-version{
+  margin-top:10px;
+  text-align:center;
+  font-size:12px;
+  opacity:.5;
+  letter-spacing:.5px;
+}
+
 .btn-primary:hover{
   transform:translateY(-1px);
   box-shadow:0 6px 18px rgba(0,0,0,.25);
@@ -230,6 +242,8 @@ export class LoginComponent {
     this.showPassword = !this.showPassword;
     this.cd.detectChanges();
   }
+
+  environment = environment;
 
   submit() {
     this.error = '';

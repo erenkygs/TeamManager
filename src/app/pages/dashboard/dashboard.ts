@@ -123,7 +123,6 @@ type DashboardSummary = {
   <ng-template #noLb>
     <div class="muted">Henüz Liderlik Tablosu verisi yok.</div>
   </ng-template>
-
 </div>
     </div>
   </ng-container>

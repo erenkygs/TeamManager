@@ -10,10 +10,12 @@ import { HeaderComponent } from '../../layout/header.component';
 import { TaskCommentsComponent } from './task-comments';
 
 type UserItem = { id: number; name?: string | null; email?: string | null; role?: string | null };
+
 type TaskVm = {
   id: number;
   title: string;
   status: 'Todo' | 'Doing' | 'Done' | string;
+  priority?: 'Low' | 'Medium' | 'High' | 'Critical';
   assignedUser?: string | null;
   description?: string | null;
   dueDate?: string | null;
@@ -26,7 +28,6 @@ type TaskVm = {
   standalone: true,
   imports: [CommonModule, FormsModule, HeaderComponent, TaskCommentsComponent],
   template: `
-
 <div *ngIf="toast.show"
      style="
       position:fixed;
@@ -48,11 +49,12 @@ type TaskVm = {
 </div>
 
 <div class="container">
-<app-header
-  [title]="project?.name || 'Proje'"
-  [subtitle]="project?.description || ''">
-  <button class="btn" (click)="back()">← Projeler</button>
-</app-header> 
+  <app-header
+    [title]="project?.name || 'Proje'"
+    [subtitle]="project?.description || ''">
+    <button class="btn" (click)="back()">← Projeler</button>
+  </app-header>
+
   <div *ngIf="error" class="api-error">{{ error }}</div>
 
   <div *ngIf="canManage" class="card" style="padding:14px;margin-top:16px;">
@@ -67,6 +69,16 @@ type TaskVm = {
       <div>
         <div class="muted small" style="margin-bottom:6px;">Bitiş Tarihi (opsiyonel)</div>
         <input class="input" type="date" [(ngModel)]="newDueDate" />
+      </div>
+
+      <div>
+        <div class="muted small" style="margin-bottom:6px;">Öncelik</div>
+        <select class="select" [(ngModel)]="newPriority">
+          <option value="Low">Düşük</option>
+          <option value="Medium">Orta</option>
+          <option value="High">Yüksek</option>
+          <option value="Critical">Kritik</option>
+        </select>
       </div>
 
       <div style="grid-column:1 / -1;">
@@ -93,26 +105,31 @@ type TaskVm = {
   <div class="grid" *ngIf="!loading">
     <div class="card task" *ngFor="let t of tasks">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
-  <div style="min-width:0;">
-    <div class="title">{{ t.title }}</div>
-    <div class="muted small" *ngIf="t.description">{{ t.description }}</div>
-    <div class="muted small" *ngIf="t.dueDate" style="margin-top:6px;">
-      Due: {{ t.dueDate | date:'yyyy-MM-dd' }}
-    </div>
-  </div>
+        <div style="min-width:0;">
+          <div class="title">{{ t.title }}</div>
+          <div class="muted small" *ngIf="t.description">{{ t.description }}</div>
+          <div class="muted small" *ngIf="t.dueDate" style="margin-top:6px;">
+            Due: {{ t.dueDate | date:'yyyy-MM-dd' }}
+          </div>
+        </div>
 
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-    <div class="pill" [class.done]="t.status==='Done'">{{ t.status }}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+          <div class="priority-badge" [ngClass]="priorityClass(t.priority)">
+            {{ priorityLabel(t.priority) }}
+          </div>
 
-    <button *ngIf="canManage"
-            class="btn danger"
-            type="button"
-            [disabled]="deleting[t.id]"
-            (click)="deleteTask(t)">
-      {{ deleting[t.id] ? 'Siliniyor…' : 'Sil' }}
-    </button>
-  </div>
-</div>
+          <div class="pill" [class.done]="t.status==='Done'">{{ t.status }}</div>
+
+          <button *ngIf="canManage"
+                  class="btn danger"
+                  type="button"
+                  [disabled]="deleting[t.id]"
+                  (click)="deleteTask(t)">
+            {{ deleting[t.id] ? 'Siliniyor…' : 'Sil' }}
+          </button>
+        </div>
+      </div>
+
       <div class="row">
         <div style="display:flex;gap:10px;align-items:center;">
           <span class="muted small">Durum</span>
@@ -122,6 +139,7 @@ type TaskVm = {
             <option value="Done">Tamamlandı</option>
           </select>
         </div>
+
         <div style="display:flex;gap:10px;align-items:center;">
           <span class="muted small">Atamak</span>
           <div class="assignee-chip">
@@ -146,19 +164,17 @@ type TaskVm = {
           </div>
         </div>
       </div>
-<app-task-comments [taskId]="t.id" [users]="users"></app-task-comments>
+
+      <app-task-comments [taskId]="t.id" [users]="users"></app-task-comments>
     </div>
   </div>
 
   <div *ngIf="!loading && tasks.length===0" class="muted" style="margin-top:16px;">
     Bu projede task yok.
   </div>
-
 </div>
 `,
   styles: [`
-
-
 .task{
   padding:16px;
   display:flex;
@@ -167,8 +183,9 @@ type TaskVm = {
   transition:.15s;
   overflow:hidden;
 }
-.task:hover{ transform:translateY(-3px); }
-
+.task:hover{
+  transform:translateY(-3px);
+}
 
 .title{
   font-weight:900;
@@ -185,7 +202,6 @@ type TaskVm = {
   .row{ grid-template-columns: 1fr; }
 }
 
-
 .pill{
   padding:6px 12px;
   border-radius:999px;
@@ -193,18 +209,19 @@ type TaskVm = {
   font-size:12px;
   font-weight:800;
 }
-.pill.done{ background:rgba(120,255,160,.18); }
+.pill.done{
+  background:rgba(120,255,160,.18);
+}
 
 .select{
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.12);
-  color: var(--text);
-
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  color:var(--text);
   color-scheme: dark;
-  appearance: none;
-  -webkit-appearance: none;
+  appearance:none;
+  -webkit-appearance:none;
 }
 .select option{
   background:#0f1420;
@@ -222,15 +239,15 @@ type TaskVm = {
 }
 .input:focus{
   background:rgba(255,255,255,.08);
-  border-color: rgba(255,255,255,.22);
+  border-color:rgba(255,255,255,.22);
 }
 
 .form-grid{
   display:grid;
-  grid-template-columns: 1fr 220px;
-  gap: 12px;
+  grid-template-columns: 1fr 200px;
+  gap:12px;
 }
-@media (max-width: 720px){
+@media (max-width: 900px){
   .form-grid{ grid-template-columns: 1fr; }
 }
 
@@ -242,20 +259,20 @@ type TaskVm = {
   border-radius:999px;
   background:rgba(255,255,255,.08);
   border:1px solid rgba(255,255,255,.10);
-  width:100%;             
+  width:100%;
   justify-content:space-between;
 }
 .assignee-chip .select{
-  min-width: 0;         
-  width: 100%;        
+  min-width:0;
+  width:100%;
 }
 
 .api-error{
   margin-top:10px;
   color:#ff7b90;
+}
 
-
-  .btn.danger{
+.btn.danger{
   border-color: rgba(255,92,122,.45);
   background: rgba(255,92,122,.12);
 }
@@ -266,6 +283,43 @@ type TaskVm = {
   opacity:.55;
   cursor:not-allowed;
 }
+
+.priority-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:84px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  border:1px solid transparent;
+  white-space:nowrap;
+  line-height:1;
+}
+
+.priority-badge.low{
+  background: rgba(120, 200, 120, .14);
+  color: #8ee28e;
+  border-color: rgba(120, 200, 120, .24);
+}
+
+.priority-badge.medium{
+  background: rgba(255, 255, 255, .08);
+  color: #d9d9e6;
+  border-color: rgba(255, 255, 255, .16);
+}
+
+.priority-badge.high{
+  background: rgba(255, 180, 80, .14);
+  color: #ffbf66;
+  border-color: rgba(255, 180, 80, .24);
+}
+
+.priority-badge.critical{
+  background: rgba(255, 92, 122, .14);
+  color: #ff7b90;
+  border-color: rgba(255, 92, 122, .24);
 }
 `]
 })
@@ -276,12 +330,18 @@ export class ProjectDetailComponent implements OnInit {
   loading = true;
   error = '';
   canManage = false;
+
   creating = false;
   newTitle = '';
   newDesc = '';
   newDueDate = '';
+  newPriority: 'Low' | 'Medium' | 'High' | 'Critical' = 'Medium';
+
   usersError = '';
   draftAssignee: Record<number, number> = {};
+
+  toast = { show: false, text: '' };
+  deleting: Record<number, boolean> = {};
 
   constructor(
     private http: HttpClient,
@@ -294,19 +354,21 @@ export class ProjectDetailComponent implements OnInit {
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     const role = this.getRoleFromToken();
+
     this.canManage = role === 'Admin' || role === 'Lead';
     this.loading = true;
     this.error = '';
 
     this.http.get<any>(`${environment.apiUrl}/api/Projects/${id}`).subscribe({
-      next: (p) => { this.project = p; this.cd.detectChanges(); },
+      next: (p) => {
+        this.project = p;
+        this.cd.detectChanges();
+      },
       error: (err) => this.handleErr(err)
     });
 
     this.reloadTasks(id);
 
-    // Users (Lead/Admin)
-    // Users (Herkes) -> comment userId -> name çözmek için
     this.http.get<any[]>(`${environment.apiUrl}/api/users`).subscribe({
       next: (u) => {
         this.users = (u ?? []).map(x => ({
@@ -325,19 +387,47 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
-  private reloadTasks(projectId: number) {
+  priorityClass(priority?: string): string {
+    switch (priority) {
+      case 'Low':
+        return 'low';
+      case 'High':
+        return 'high';
+      case 'Critical':
+        return 'critical';
+      default:
+        return 'medium';
+    }
+  }
+
+  priorityLabel(priority?: string): string {
+    switch (priority) {
+      case 'Low':
+        return 'Düşük';
+      case 'High':
+        return 'Yüksek';
+      case 'Critical':
+        return 'Kritik';
+      default:
+        return 'Orta';
+    }
+  }
+
+  private reloadTasks(projectId: number): void {
     this.http.get<any[]>(`${environment.apiUrl}/api/Tasks/project/${projectId}`).subscribe({
       next: (t) => {
         this.tasks = (t ?? []).map(x => ({
           id: x.id ?? x.Id,
           title: x.title ?? x.Title,
           status: x.status ?? x.Status,
+          priority: x.priority ?? x.Priority ?? 'Medium',
           assignedUser: x.assignedUser ?? x.AssignedUser ?? null,
           description: x.description ?? x.Description ?? null,
           dueDate: x.dueDate ?? x.DueDate ?? null,
           assignedUserId: x.assignedUserId ?? x.AssignedUserId ?? null,
-          assignedUserName: x.assignedUserName ?? null
+          assignedUserName: x.assignedUserName ?? x.AssignedUserName ?? null
         }));
+
         this.tasks.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
         this.loading = false;
         this.cd.detectChanges();
@@ -365,7 +455,8 @@ export class ProjectDetailComponent implements OnInit {
       title: this.newTitle.trim(),
       description: this.newDesc?.trim() || null,
       projectId,
-      dueDate: this.newDueDate ? (this.newDueDate + 'T00:00:00') : null
+      dueDate: this.newDueDate ? (this.newDueDate + 'T00:00:00') : null,
+      priority: this.newPriority
     };
 
     this.http.post<any>(`${environment.apiUrl}/api/Tasks`, payload)
@@ -379,10 +470,12 @@ export class ProjectDetailComponent implements OnInit {
             id: res?.id ?? res?.Id ?? 0,
             title: res?.title ?? res?.Title ?? payload.title,
             status: res?.status ?? res?.Status ?? 'Todo',
+            priority: res?.priority ?? res?.Priority ?? payload.priority ?? 'Medium',
             assignedUser: res?.assignedUser ?? res?.AssignedUser ?? null,
             description: res?.description ?? res?.Description ?? payload.description,
             dueDate: res?.dueDate ?? res?.DueDate ?? payload.dueDate,
-            assignedUserId: res?.assignedUserId ?? res?.AssignedUserId ?? null
+            assignedUserId: res?.assignedUserId ?? res?.AssignedUserId ?? null,
+            assignedUserName: res?.assignedUserName ?? res?.AssignedUserName ?? null
           };
 
           if (vm.id) {
@@ -401,6 +494,7 @@ export class ProjectDetailComponent implements OnInit {
     this.newTitle = '';
     this.newDesc = '';
     this.newDueDate = '';
+    this.newPriority = 'Medium';
   }
 
   changeStatus(task: TaskVm, e: any): void {
@@ -412,7 +506,6 @@ export class ProjectDetailComponent implements OnInit {
         task.status = status;
         this.cd.detectChanges();
       },
-
       error: (err) => this.handleErr(err)
     });
   }
@@ -435,16 +528,18 @@ export class ProjectDetailComponent implements OnInit {
           task.assignedUser = userId === 0
             ? null
             : (u?.name || u?.email || ('User ' + userId));
+          task.assignedUserName = userId === 0
+            ? null
+            : (u?.name || u?.email || ('User ' + userId));
 
           this.showToast(
             userId === 0
-              ? "Atama kaldırıldı"
-              : `${task.title} görevi ${task.assignedUser} kullanıcısına atandı`
+              ? 'Atama kaldırıldı'
+              : `${task.title} görevi ${task.assignedUserName} kullanıcısına atandı`
           );
 
           this.cd.detectChanges();
         },
-
         error: (err) => this.handleErr(err)
       });
   }
@@ -457,6 +552,7 @@ export class ProjectDetailComponent implements OnInit {
       const u = this.users.find(x => x.id === uid);
       return u ? (u.name || u.email || ('User ' + uid)) : ('User ' + uid);
     }
+
     return 'Unassigned';
   }
 
@@ -468,6 +564,7 @@ export class ProjectDetailComponent implements OnInit {
       this.router.navigateByUrl('/login');
       return;
     }
+
     let detail = '';
     if (typeof err?.error === 'string') {
       detail = err.error;
@@ -521,13 +618,12 @@ export class ProjectDetailComponent implements OnInit {
   back(): void {
     this.router.navigateByUrl('/projects');
   }
-  goProfile() {
+
+  goProfile(): void {
     this.router.navigateByUrl('/profile');
   }
 
-  toast = { show: false, text: '' };
-
-  showToast(msg: string) {
+  showToast(msg: string): void {
     this.toast.text = msg;
     this.toast.show = true;
     this.cd.detectChanges();
@@ -538,13 +634,15 @@ export class ProjectDetailComponent implements OnInit {
     }, 2000);
   }
 
-  deleting: Record<number, boolean> = {};
-  deleteTask(t: any): void {
+  deleteTask(t: TaskVm): void {
     if (!this.canManage) return;
+
     const ok = confirm(`"${t.title}" görevini silmek istiyor musun?`);
     if (!ok) return;
+
     this.error = '';
     this.deleting[t.id] = true;
+
     this.http.delete(`${environment.apiUrl}/api/Tasks/${t.id}`)
       .pipe(finalize(() => {
         delete this.deleting[t.id];
