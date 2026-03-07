@@ -61,7 +61,7 @@ type DashboardSummary = {
       <div class="card" style="padding:14px;">
         <div style="font-weight:800;margin-bottom:12px;">Son 7 Gün Tamamlanan</div>
 
-        <div *ngIf="d.completedLast7Days?.length; else noDays" style="display:grid;gap:10px;">
+        <div *ngIf="d.completedLast7Days.length; else noDays" style="display:grid;gap:10px;">
           <div *ngFor="let x of d.completedLast7Days"
                style="display:grid;grid-template-columns:110px 1fr 36px;gap:10px;align-items:center;">
             <div class="muted small">{{ x.date }}</div>
@@ -87,7 +87,7 @@ type DashboardSummary = {
     </div>
   </div>
 
-  <table *ngIf="d.leaderboard?.length; else noLb" style="width:100%;border-collapse:collapse;">
+  <table *ngIf="d.leaderboard.length; else noLb" style="width:100%;border-collapse:collapse;">
     <thead>
       <tr>
         <th class="muted small"

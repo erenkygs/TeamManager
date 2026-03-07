@@ -145,7 +145,7 @@ type TaskVm = {
           <div class="assignee-chip">
             <ng-container *ngIf="canManage; else readOnlyAssignee">
               <select class="select"
-                      [ngModel]="draftAssignee[t.id] ?? (getAssignedId(t) ?? 0)"
+                      [ngModel]="draftAssignee[t.id] || (getAssignedId(t) || 0)"
                       (ngModelChange)="draftAssignee[t.id] = $event">
                 <option [ngValue]="0">Atanmamış</option>
                 <option *ngFor="let u of users" [ngValue]="u.id">

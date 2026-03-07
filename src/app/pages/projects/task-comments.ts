@@ -68,7 +68,7 @@ type TaskComment = {
                 placeholder="Yorum yaz..."></textarea>
 
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <span class="muted small">{{ (newContent?.length || 0) }}/500</span>
+        <span class="muted small">{{ (newContent.length || 0) }}/500</span>
 
         <button class="btn primary"
                 type="button"

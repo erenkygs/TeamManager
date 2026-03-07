@@ -25,12 +25,12 @@ type Project = {
   <p *ngIf="loading" class="muted">Yükleniyor...</p>
   <p *ngIf="error" style="color:#ff7b90">{{ error }}</p>
 
- <div *ngIf="!loading && projects?.length === 0" class="empty">
+ <div *ngIf="!loading && projects.length === 0" class="empty">
   <div style="font-size:40px;"></div>
   <div class="muted">Henüz proje oluşturulmadı</div>
 </div>
 
-  <div *ngIf="projects?.length"
+  <div *ngIf="projects.length"
        style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px;">
     <div class="card" *ngFor="let p of projects" style="padding:16px;display:grid;gap:10px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
