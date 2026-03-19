@@ -109,7 +109,7 @@ type TaskVm = {
           <div class="title">{{ t.title }}</div>
           <div class="muted small" *ngIf="t.description">{{ t.description }}</div>
           <div class="muted small" *ngIf="t.dueDate" style="margin-top:6px;">
-            Due: {{ t.dueDate | date:'yyyy-MM-dd' }}
+            Bitiş Tarihi: {{ t.dueDate | date:'yyyy-MM-dd' }}
           </div>
         </div>
 

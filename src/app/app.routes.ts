@@ -13,21 +13,18 @@ export const routes: Routes = [
         loadComponent: () =>
             import('./pages/dashboard/dashboard').then(m => m.DashboardComponent)
     },
-
     {
         path: 'projects',
         canActivate: [authGuard],
         loadComponent: () =>
             import('./pages/projects/projects').then(m => m.ProjectsComponent)
     },
-
     {
         path: 'projects/create',
         canActivate: [authGuard],
         loadComponent: () =>
             import('./pages/projects/create-project').then(m => m.CreateProjectComponent)
     },
-
     {
         path: 'projects/:id',
         canActivate: [authGuard],

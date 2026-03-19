@@ -204,7 +204,6 @@ export class TeamComponent implements OnInit {
   canDelete = false;
   deleting: Record<number, boolean> = {};
 
-
   get canManageTeam(): boolean {
     return this.auth.hasAnyRole('Admin', 'Lead');
   }
