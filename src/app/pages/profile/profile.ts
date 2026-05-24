@@ -1,5 +1,4 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -10,111 +9,425 @@ import { HeaderComponent } from '../../layout/header.component';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [FormsModule, HeaderComponent],
   template: `
 <div class="container">
   <app-header title="Profilim" subtitle="Hesap bilgileri ve şifre işlemleri"></app-header>
 
-  <div *ngIf="error" class="api-error">{{ error }}</div>
-  <div *ngIf="ok" class="ok">{{ ok }}</div>
+  @if (error) { <div class="msg-box err">{{ error }}</div> }
+  @if (ok)    { <div class="msg-box ok">✓ {{ ok }}</div> }
 
-  <div class="grid" style="margin-top:16px;">
-    <div class="card" style="padding:16px;">
-      <div style="font-weight:900;margin-bottom:12px;">Kullanıcı Bilgileri</div>
+  @if (loading) { <div class="loading-row"><div class="spinner"></div> Yükleniyor…</div> }
 
-      <div *ngIf="loading" class="muted">Yükleniyor…</div>
+  @if (!loading && me) {
+    <div class="layout">
 
-      <ng-container *ngIf="!loading && me">
-        <div class="row"><span class="muted small">Ad</span><span style="font-weight:800">{{ me.name || '-' }}</span></div>
-        <div class="row"><span class="muted small">Email</span><span style="font-weight:800">{{ me.email || '-' }}</span></div>
-        <div class="row"><span class="muted small">Rol</span><span style="font-weight:800">{{ me.role || '-' }}</span></div>
-        <div class="row" *ngIf="me.createdAt">
-          <span class="muted small">Kayıt</span>
-          <span style="font-weight:800">{{ me.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
+      <!-- Sol: Kullanıcı bilgileri -->
+      <div class="card info-card">
+        <!-- Avatar -->
+        <div class="avatar-wrap">
+          <div class="avatar">{{ initials() }}</div>
+          <div class="avatar-glow"></div>
         </div>
-      </ng-container>
-    </div>
 
-    <!-- Şifre Değiştir -->
-    <div class="card" style="padding:16px;">
-      <div style="font-weight:900;margin-bottom:12px;">Şifre Değiştir</div>
+        <div class="display-name">{{ me.name || me.email || 'Kullanıcı' }}</div>
+        <div class="role-badge" [class]="roleCls()">{{ roleLabel() }}</div>
 
-      <div class="muted small" style="margin-bottom:6px;">Mevcut şifre</div>
-      <input class="input" type="password" [(ngModel)]="currentPassword" />
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-label">Ad Soyad</span>
+            <span class="info-val">{{ me.name || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-val">{{ me.email || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Rol</span>
+            <span class="info-val">{{ roleLabel() }}</span>
+          </div>
+          @if (me.title) {
+            <div class="info-row">
+              <span class="info-label">Ünvan</span>
+              <span class="info-val">{{ me.title }}</span>
+            </div>
+          }
+          @if (me.createdAt) {
+            <div class="info-row">
+              <span class="info-label">Kayıt</span>
+              <span class="info-val">{{ fmt(me.createdAt) }}</span>
+            </div>
+          }
+        </div>
+      </div>
 
-      <div class="muted small" style="margin:10px 0 6px;">Yeni şifre</div>
-      <input class="input" type="password" [(ngModel)]="newPassword" />
+      <!-- Sağ: Şifre değiştir -->
+      <div class="card pw-card">
+        <div class="card-title">Şifre Değiştir</div>
 
-      <div class="muted small" style="margin:10px 0 6px;">Yeni şifre (tekrar)</div>
-      <input class="input" type="password" [(ngModel)]="newPassword2" />
+        <div class="fields">
+          <div class="field">
+            <label>Mevcut Şifre</label>
+            <div class="pw-row">
+              <input class="input" [type]="show0 ? 'text' : 'password'"
+                     [(ngModel)]="currentPassword" placeholder="Mevcut şifre" />
+              <button type="button" class="eye-btn" (click)="show0 = !show0">
+                {{ show0 ? 'Gizle' : 'Göster' }}
+              </button>
+            </div>
+          </div>
 
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
-        <button class="btn" type="button" (click)="clearPw()">Temizle</button>
+          <div class="field">
+            <label>Yeni Şifre</label>
+            <div class="pw-row">
+              <input class="input" [type]="show1 ? 'text' : 'password'"
+                     [(ngModel)]="newPassword" placeholder="En az 6 karakter" />
+              <button type="button" class="eye-btn" (click)="show1 = !show1">
+                {{ show1 ? 'Gizle' : 'Göster' }}
+              </button>
+            </div>
+          </div>
 
-        <button class="btn primary" type="button" [disabled]="saving" (click)="changePassword()">
-          <span *ngIf="!saving">Kaydet</span>
-          <span *ngIf="saving">Kaydediliyor…</span>
-        </button>
+          <div class="field">
+            <label>Yeni Şifre (tekrar)</label>
+            <div class="pw-row">
+              <input class="input" [type]="show2 ? 'text' : 'password'"
+                     [(ngModel)]="newPassword2" placeholder="Şifreyi tekrar gir" />
+              <button type="button" class="eye-btn" (click)="show2 = !show2">
+                {{ show2 ? 'Gizle' : 'Göster' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pw-actions">
+          <button class="action-btn cancel-btn" type="button" (click)="clearPw()">Temizle</button>
+          <button class="action-btn save-btn" type="button"
+                  [disabled]="saving || !canSave()" (click)="changePassword()">
+            @if (!saving) { <span>Kaydet</span> }
+            @if (saving)  { <span>Kaydediliyor…</span> }
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  }
 </div>
 `,
   styles: [`
-.grid{
-  display:grid;
-  gap:14px;
-  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-.row{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  padding:10px 0;
-  border-bottom:1px solid rgba(255,255,255,.06);
-}
-.row:last-child{ border-bottom:none; }
 
-.input{
-  width:100%;
-  padding:10px 12px;
-  border-radius:12px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  color:var(--text);
-  outline:none;
+/* ── Layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 14px;
+  align-items: start;
 }
-.input:focus{
-  background:rgba(255,255,255,.08);
-  border-color: rgba(255,255,255,.22);
+
+@media (max-width: 780px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── Info card ── */
+.info-card {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  animation: card-in .4s cubic-bezier(.22,.68,0,1.2);
 }
-.api-error{ margin-top:10px; color:#ff7b90; }
-.ok{ margin-top:10px; color:#7dffb3; }
+
+.info-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 1px);
+  background: radial-gradient(400px 300px at 50% 0%, rgba(120,90,255,.18), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Avatar ── */
+.avatar-wrap {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 4px;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  border: 3px solid rgba(255,255,255,.14);
+}
+
+.avatar-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  filter: blur(14px);
+  opacity: .35;
+  z-index: -1;
+}
+
+.display-name {
+  font-size: 18px;
+  font-weight: 900;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+/* ── Role badge ── */
+.role-badge {
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 6px;
+}
+.r-admin  { background: rgba(255,80,80,.12);   border-color: rgba(255,80,80,.28);   color: #ff9999; }
+.r-lead   { background: rgba(120,90,255,.12);  border-color: rgba(120,90,255,.28);  color: #b0a0ff; }
+.r-junior { background: rgba(100,160,255,.12); border-color: rgba(100,160,255,.28); color: #80b4ff; }
+.r-other  { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); color: var(--text); }
+
+/* ── Info rows ── */
+.info-rows {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.info-row:last-child { border-bottom: none; }
+
+.info-label {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: .5;
+  white-space: nowrap;
+}
+
+.info-val {
+  font-size: 14px;
+  font-weight: 800;
+  text-align: right;
+  word-break: break-all;
+}
+
+/* ── Password card ── */
+.pw-card {
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  animation: card-in .4s cubic-bezier(.22,.68,0,1.2) .07s both;
+}
+
+.pw-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 1px);
+  background: radial-gradient(500px 250px at 0% 0%, rgba(0,200,130,.12), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 900;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Fields ── */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: .8;
+}
+
+.pw-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.input:focus {
+  background: rgba(255,255,255,.09);
+  border-color: rgba(0,200,130,.45);
+  box-shadow: 0 0 0 3px rgba(0,200,130,.10);
+}
+
+.eye-btn {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background .12s;
+}
+.eye-btn:hover { background: rgba(255,255,255,.11); }
+
+/* ── Actions ── */
+.pw-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.action-btn {
+  padding: 11px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: transform .13s ease, box-shadow .15s ease, background .15s ease;
+}
+.action-btn:hover    { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.28); }
+.action-btn:active   { transform: translateY(0); box-shadow: none; }
+.action-btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+.cancel-btn {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+}
+.cancel-btn:hover { background: rgba(255,255,255,.12); }
+
+.save-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #fff;
+  min-width: 120px;
+}
+
+/* ── Messages ── */
+.msg-box {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.msg-box.err {
+  background: rgba(255,80,80,.10);
+  border: 1px solid rgba(255,80,80,.35);
+  color: #ffd1d1;
+}
+.msg-box.ok {
+  background: rgba(0,210,140,.10);
+  border: 1px solid rgba(0,210,140,.35);
+  color: #a8ffd6;
+  animation: pop-in .28s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Loading ── */
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  opacity: .7;
+}
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,.15);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 `]
 })
 export class ProfileComponent implements OnInit {
   me: any = null;
-
   loading = false;
   saving = false;
-
   error = '';
   ok = '';
 
   currentPassword = '';
   newPassword = '';
   newPassword2 = '';
+  show0 = false;
+  show1 = false;
+  show2 = false;
 
   constructor(
     private http: HttpClient,
     private auth: AuthService,
     private router: Router,
     private cd: ChangeDetectorRef
-  ) { }
+  ) {}
 
-  ngOnInit(): void {
-    this.loadMe();
-  }
+  ngOnInit(): void { this.loadMe(); }
 
   loadMe(): void {
     this.loading = true;
@@ -122,16 +435,13 @@ export class ProfileComponent implements OnInit {
     this.ok = '';
 
     this.http.get<any>(`${environment.apiUrl}/api/users/me`).subscribe({
-      next: (res) => {
-        this.me = res;
-        this.loading = false;
-        this.cd.detectChanges();
-      },
-      error: (err) => {
-        this.loading = false;
-        this.handleErr(err);
-      }
+      next: (res) => { this.me = res; this.loading = false; this.cd.detectChanges(); },
+      error: (err) => { this.loading = false; this.handleErr(err); }
     });
+  }
+
+  canSave(): boolean {
+    return !!this.currentPassword && !!this.newPassword && !!this.newPassword2;
   }
 
   changePassword(): void {
@@ -143,13 +453,11 @@ export class ProfileComponent implements OnInit {
       this.cd.detectChanges();
       return;
     }
-
     if (this.newPassword !== this.newPassword2) {
       this.error = 'Yeni şifreler eşleşmiyor.';
       this.cd.detectChanges();
       return;
     }
-
     if (this.newPassword.length < 6) {
       this.error = 'Yeni şifre en az 6 karakter olmalı.';
       this.cd.detectChanges();
@@ -164,14 +472,11 @@ export class ProfileComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.saving = false;
-        this.ok = 'Şifre güncellendi ✅';
+        this.ok = 'Şifre başarıyla güncellendi';
         this.clearPw();
         this.cd.detectChanges();
       },
-      error: (err) => {
-        this.saving = false;
-        this.handleErr(err);
-      }
+      error: (err) => { this.saving = false; this.handleErr(err); }
     });
   }
 
@@ -182,17 +487,44 @@ export class ProfileComponent implements OnInit {
     this.cd.detectChanges();
   }
 
-  private handleErr(err: any): void {
-    if (err?.status === 401) {
-      this.auth.logout();
-      this.router.navigateByUrl('/login');
-      return;
+  initials(): string {
+    const name = (this.me?.name || '').trim();
+    if (name) {
+      const parts = name.split(/\s+/).filter(Boolean);
+      return ((parts[0]?.[0] || '') + (parts.length > 1 ? (parts[parts.length - 1]?.[0] || '') : '')).toUpperCase() || 'U';
     }
+    const email = (this.me?.email || '').trim();
+    return email ? email.slice(0, 2).toUpperCase() : 'U';
+  }
 
-    let detail = '';
-    if (typeof err?.error === 'string') detail = err.error;
-    else detail = err?.error?.message || err?.error?.title || '';
+  roleCls(): string {
+    const r = (this.me?.role || '').toLowerCase();
+    if (r === 'admin') return 'r-admin';
+    if (r === 'lead')  return 'r-lead';
+    if (r === 'junior') return 'r-junior';
+    return 'r-other';
+  }
 
+  roleLabel(): string {
+    const r = (this.me?.role || '').toLowerCase();
+    if (r === 'admin') return 'Admin';
+    if (r === 'lead')  return 'Lead';
+    if (r === 'junior') return 'Junior';
+    return this.me?.role || 'Üye';
+  }
+
+  fmt(str: string): string {
+    if (!str) return '';
+    try {
+      const d = new Date(str);
+      const p = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    } catch { return str; }
+  }
+
+  private handleErr(err: any): void {
+    if (err?.status === 401) { this.auth.logout(); this.router.navigateByUrl('/login'); return; }
+    let detail = typeof err?.error === 'string' ? err.error : (err?.error?.message || err?.error?.title || '');
     this.error = `API hata: ${err?.status ?? ''} ${detail || (err?.statusText ?? '')}`.trim();
     console.error(err);
     this.cd.detectChanges();

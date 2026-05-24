@@ -1,126 +1,180 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth/auth.service';
+import { HeaderComponent } from '../../layout/header.component';
 
 @Component({
   selector: 'app-create-project',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, HeaderComponent],
   template: `
-  <div class="container">
-    <div class="topbar">
-      <div>
-        <h1 class="h1">Proje Ekle</h1>
-        <div class="muted" style="margin-top:6px;">Yeni proje oluştur</div>
-      </div>
+<div class="container">
+  <app-header title="Proje Ekle" subtitle="Yeni proje oluştur">
+    <button class="btn" (click)="back()">← Geri</button>
+  </app-header>
 
-      <button class="btn" (click)="back()">Geri</button>
-    </div>
+  <div class="form-wrap">
+    <div class="form-card card">
 
-    <div *ngIf="error" class="api-error">{{ error }}</div>
+      @if (error) { <div class="msg-box err">{{ error }}</div> }
 
-    <div class="wrap">
-      <div class="card form">
+      <div class="grid">
         <div class="field">
-          <div class="label muted small">Proje Adı</div>
+          <label>Proje Adı</label>
           <input class="input" [(ngModel)]="name" placeholder="Örn: TeamManager" />
         </div>
 
         <div class="field">
-          <div class="label muted small">Açıklama (opsiyonel)</div>
-          <textarea class="input" rows="5" [(ngModel)]="description" placeholder="Kısa açıklama..."></textarea>
+          <label>Açıklama <span class="optional">(opsiyonel)</span></label>
+          <textarea class="input" rows="5" [(ngModel)]="description"
+                    placeholder="Kısa açıklama..."></textarea>
         </div>
+      </div>
 
-        <div class="actions">
-          <button class="btn" type="button" (click)="back()">İptal</button>
-          <button class="btn primary" type="button" [disabled]="saving || !name.trim()" (click)="save()">
-            {{ saving ? 'Kaydediliyor…' : 'Kaydet' }}
-          </button>
-        </div>
+      <div class="actions">
+        <button class="action-btn cancel-btn" type="button" (click)="back()">İptal</button>
+        <button class="action-btn save-btn" type="button"
+                [disabled]="saving || !name.trim()" (click)="save()">
+          @if (!saving) { <span>Kaydet</span> }
+          @if (saving)  { <span>Kaydediliyor…</span> }
+        </button>
       </div>
     </div>
   </div>
-  `,
+</div>
+`,
   styles: [`
-    .topbar{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:16px;
-    }
+.form-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
 
-    .h1{
-      margin:0;
-      font-weight:900;
-      letter-spacing:.2px;
-    }
+.form-card {
+  width: min(680px, 100%);
+  padding: 28px;
+  position: relative;
+  animation: card-in .35s cubic-bezier(.22,.68,0,1.2);
+}
 
-    .wrap{
-      margin-top:16px;
-      display:flex;
-      justify-content:center;
-    }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-    .card.form{
-      width:min(680px, 100%);
-      padding:18px;
-      border-radius:18px;
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: 0 16px 40px rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
-    }
+.form-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 1px);
+  background: radial-gradient(700px 220px at 10% 0%, rgba(31,111,255,.20), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-    .field{
-      display:grid;
-      gap:8px;
-      margin-bottom:14px;
-    }
+.grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+}
 
-    .label{
-      font-weight:800;
-      font-size:13px;
-      opacity:.9;
-    }
+.field {
+  display: grid;
+  gap: 7px;
+}
 
-    .input{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.14);
-      color: var(--text);
-      outline:none;
-    }
+label {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: .88;
+}
 
-    .input:focus{
-      background: rgba(255,255,255,.08);
-      border-color: rgba(255,255,255,.24);
-    }
+.optional {
+  font-weight: 400;
+  opacity: .55;
+}
 
-    textarea.input{
-      resize: vertical;
-      min-height: 120px;
-    }
+.input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
 
-    .actions{
-      display:flex;
-      justify-content:flex-end;
-      gap:10px;
-      margin-top:8px;
-    }
+.input:focus {
+  background: rgba(255,255,255,.09);
+  border-color: rgba(31,111,255,.55);
+  box-shadow: 0 0 0 3px rgba(31,111,255,.13);
+}
 
-    .api-error{
-      margin-top:10px;
-      color:#ff7b90;
-      font-weight:700;
-    }
-  `]
+textarea.input {
+  resize: vertical;
+  min-height: 130px;
+}
+
+.msg-box {
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.msg-box.err {
+  border: 1px solid rgba(255,80,80,.35);
+  background: rgba(255,80,80,.10);
+  color: #ffd1d1;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.action-btn {
+  padding: 11px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: transform .13s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.action-btn:hover   { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.28); }
+.action-btn:active  { transform: translateY(0); box-shadow: none; }
+.action-btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+.cancel-btn {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+}
+.cancel-btn:hover { background: rgba(255,255,255,.12); }
+
+.save-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #fff;
+  min-width: 120px;
+}
+`]
 })
 export class CreateProjectComponent {
   name = '';
@@ -133,22 +187,18 @@ export class CreateProjectComponent {
     private auth: AuthService,
     private router: Router,
     private cd: ChangeDetectorRef
-  ) { }
+  ) {}
 
-  back() {
-    this.router.navigateByUrl('/projects');
-  }
+  back() { this.router.navigateByUrl('/projects'); }
 
   save() {
     this.error = '';
     this.saving = true;
 
-    const body = {
+    this.http.post(`${environment.apiUrl}/api/Projects`, {
       name: this.name.trim(),
-      description: this.description.trim() ? this.description.trim() : null,
-    };
-
-    this.http.post(`${environment.apiUrl}/api/Projects`, body).subscribe({
+      description: this.description.trim() || null,
+    }).subscribe({
       next: () => {
         this.saving = false;
         this.router.navigateByUrl('/projects');

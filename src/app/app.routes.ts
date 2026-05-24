@@ -48,5 +48,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/team/team-create').then(m => m.TeamCreateComponent)
     },
     { path: 'profile', component: ProfileComponent },
+    {
+        path: 'my-tasks',
+        canActivate: [authGuard],
+        loadComponent: () =>
+            import('./pages/my-tasks/my-tasks').then(m => m.MyTasksComponent)
+    },
     { path: '**', redirectTo: '' }
 ];
