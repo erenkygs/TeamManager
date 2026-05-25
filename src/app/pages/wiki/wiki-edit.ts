@@ -26,7 +26,7 @@ import { HeaderComponent } from '../../layout/header.component';
   }
 
   @if (!loading) {
-    <div class="edit-card card">
+    <form class="edit-card card" (ngSubmit)="save()">
 
       @if (error) {
         <div class="err-box">{{ error }}</div>
@@ -38,9 +38,11 @@ import { HeaderComponent } from '../../layout/header.component';
           class="inp"
           type="text"
           [(ngModel)]="title"
+          name="title"
           placeholder="Makale başlığı…"
           autocomplete="off"
-          spellcheck="false" />
+          spellcheck="false"
+          (keydown.enter)="$event.preventDefault()" />
       </div>
 
       <div class="field">
@@ -48,6 +50,7 @@ import { HeaderComponent } from '../../layout/header.component';
         <textarea
           class="inp textarea"
           [(ngModel)]="content"
+          name="content"
           placeholder="Makale içeriği…"
           autocomplete="off"
           spellcheck="false">
@@ -56,14 +59,13 @@ import { HeaderComponent } from '../../layout/header.component';
 
       <div class="btn-row">
         <button type="button" class="cancel-btn" (click)="cancel()">İptal</button>
-        <button type="button" class="save-btn"
-                (click)="save()"
+        <button type="submit" class="save-btn"
                 [disabled]="saving || !title.trim() || !content.trim()">
           {{ saving ? 'Kaydediliyor…' : (isEdit ? 'Güncelle' : 'Yayımla') }}
         </button>
       </div>
 
-    </div>
+    </form>
   }
 </div>
 `,
