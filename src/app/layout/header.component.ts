@@ -69,14 +69,15 @@ import { interval, Subscription } from 'rxjs';
 
     <!-- Navigasyon -->
     <nav class="nav-group">
-      <button class="nav-btn" title="" [class.active]="isDashboard()"                        (click)="goDashboard()">Ana Sayfa</button>
-      <button class="nav-btn" title="" [class.active]="currentUrl.startsWith('/projects')"   (click)="goProjects()">Projeler</button>
-      <button class="nav-btn" title="" [class.active]="currentUrl.startsWith('/profile')"    (click)="goProfile()">Profilim</button>
-      <button class="nav-btn" title="" [class.active]="currentUrl.startsWith('/team')"       (click)="goTeam()">Ekip</button>
-      <button class="nav-btn" title="" [class.active]="currentUrl.startsWith('/my-tasks')"  (click)="goMyTasks()">Görevlerim</button>
+      <button type="button" class="nav-btn" title="" [class.active]="isDashboard()"                        (click)="goDashboard()">Ana Sayfa</button>
+      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/projects')"   (click)="goProjects()">Projeler</button>
+      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/profile')"    (click)="goProfile()">Profilim</button>
+      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/team')"       (click)="goTeam()">Ekip</button>
+      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/my-tasks')"  (click)="goMyTasks()">Görevlerim</button>
+      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/wiki')"      (click)="goWiki()">Wiki</button>
     </nav>
 
-    <button class="nav-btn logout-btn" (click)="logout()">Çıkış Yap</button>
+    <button type="button" class="nav-btn logout-btn" (click)="logout()">Çıkış Yap</button>
   </div>
 </div>
 `,
@@ -443,7 +444,6 @@ export class HeaderComponent implements OnDestroy {
 
   deleteNoti(n: NotificationItem, ev: MouseEvent) {
     ev.stopPropagation();
-    if (!confirm('Bildirimi silmek istiyor musun?')) return;
     this.noti.delete(n.id).subscribe({
       next: () => {
         this.notifications = (this.notifications ?? []).filter(x => x.id !== n.id);
@@ -455,11 +455,12 @@ export class HeaderComponent implements OnDestroy {
   }
 
   isDashboard(): boolean { return this.currentUrl === '/' || this.currentUrl.startsWith('/?'); }
-  goDashboard() { this.router.navigateByUrl('/'); }
-  goProjects()  { this.router.navigateByUrl('/projects'); }
-  goProfile()   { this.router.navigateByUrl('/profile'); }
-  goTeam()      { this.router.navigateByUrl('/team'); }
-  goMyTasks()   { this.router.navigateByUrl('/my-tasks'); }
+  goDashboard() { this.notiOpen = false; this.router.navigateByUrl('/'); }
+  goProjects()  { this.notiOpen = false; this.router.navigateByUrl('/projects'); }
+  goProfile()   { this.notiOpen = false; this.router.navigateByUrl('/profile'); }
+  goTeam()      { this.notiOpen = false; this.router.navigateByUrl('/team'); }
+  goMyTasks()   { this.notiOpen = false; this.router.navigateByUrl('/my-tasks'); }
+  goWiki()      { this.notiOpen = false; this.router.navigateByUrl('/wiki'); }
 
   logout() {
     this.pollSub?.unsubscribe();

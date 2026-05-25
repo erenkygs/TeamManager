@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth/auth.service';
 
-type LoginResponse = { token: string };
+type LoginResponse = { token: string; sessionId?: number };
 
 @Component({
   selector: 'app-login',
@@ -431,6 +431,9 @@ export class LoginComponent {
     }).subscribe({
       next: res => {
         localStorage.setItem('tm_token', res.token);
+        if (res.sessionId) localStorage.setItem('tm_session_id', String(res.sessionId));
+        localStorage.removeItem('tm_session_saved');
+        localStorage.setItem('tm_session_start', String(Date.now()));
         this.loading = false;
         this.router.navigateByUrl('/');
         this.cd.detectChanges();

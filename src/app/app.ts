@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,16 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   template: `<router-outlet></router-outlet>`
 })
-export class App { }
+export class App implements OnInit {
+  ngOnInit() {
+    window.addEventListener('beforeunload', () => {
+      const sessionId = Number(localStorage.getItem('tm_session_id') ?? '0');
+      const token = localStorage.getItem('tm_token');
+      if (!sessionId || !token) return;
+      navigator.sendBeacon(
+        `${environment.apiUrl}/api/auth/logout`,
+        new Blob([JSON.stringify({ sessionId })], { type: 'application/json' })
+      );
+    });
+  }
+}

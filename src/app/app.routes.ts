@@ -38,11 +38,6 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/team/team').then(m => m.TeamComponent)
     },
     {
-        path: 'team',
-        canActivate: [authGuard],
-        loadComponent: () => import('./pages/team/team').then(m => m.TeamComponent)
-    },
-    {
         path: 'team/create',
         canActivate: [authGuard],
         loadComponent: () => import('./pages/team/team-create').then(m => m.TeamCreateComponent)
@@ -53,6 +48,26 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
             import('./pages/my-tasks/my-tasks').then(m => m.MyTasksComponent)
+    },
+    {
+        path: 'wiki',
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/wiki/wiki-list').then(m => m.WikiListComponent)
+    },
+    {
+        path: 'wiki/new',
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/wiki/wiki-edit').then(m => m.WikiEditComponent)
+    },
+    {
+        path: 'wiki/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/wiki/wiki-detail').then(m => m.WikiDetailComponent)
+    },
+    {
+        path: 'wiki/:id/edit',
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/wiki/wiki-edit').then(m => m.WikiEditComponent)
     },
     { path: '**', redirectTo: '' }
 ];

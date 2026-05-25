@@ -21,7 +21,7 @@ type Project = {
 <div class="container">
   <app-header title="Projeler" subtitle="Tüm projeler">
     @if (canManageProjects) {
-      <button class="add-btn" (click)="addProject()">+ Proje Ekle</button>
+      <button type="button" class="add-btn" (click)="addProject()">+ Proje Ekle</button>
     }
   </app-header>
 
@@ -55,13 +55,18 @@ type Project = {
             <div class="proj-date muted small">{{ fmt(p.createdAt) }}</div>
             <div class="proj-actions">
               @if (canManageProjects) {
-                <button class="action-btn del-btn"
-                        (click)="deleteProject(p)"
-                        [disabled]="deleting[p.id]">
-                  {{ deleting[p.id] ? 'Siliniyor…' : 'Sil' }}
-                </button>
+                @if (confirmingDeleteId !== p.id) {
+                  <button type="button" class="action-btn del-btn"
+                          (click)="confirmingDeleteId = p.id"
+                          [disabled]="deleting[p.id]">
+                    Sil
+                  </button>
+                } @else {
+                  <button type="button" class="action-btn del-yes-btn" (click)="deleteProject(p)">Evet, Sil</button>
+                  <button type="button" class="action-btn cancel-btn2" (click)="confirmingDeleteId = null">Vazgeç</button>
+                }
               }
-              <button class="action-btn detail-btn" (click)="openProject(p.id)">
+              <button type="button" class="action-btn detail-btn" (click)="openProject(p.id)">
                 Detay →
               </button>
             </div>
@@ -203,6 +208,19 @@ type Project = {
 }
 .del-btn:hover { background: rgba(255,92,122,.18); box-shadow: 0 4px 14px rgba(255,92,122,.2); }
 
+.del-yes-btn {
+  background: rgba(255,80,80,.8);
+  border-color: transparent;
+  color: #fff;
+}
+.del-yes-btn:hover { background: rgba(255,80,80,1); }
+
+.cancel-btn2 {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.12);
+}
+.cancel-btn2:hover { background: rgba(255,255,255,.10); }
+
 .detail-btn {
   background: rgba(31,111,255,.12);
   border-color: rgba(31,111,255,.30);
@@ -257,6 +275,7 @@ export class ProjectsComponent implements OnInit {
   loading = false;
   error = '';
   deleting: Record<number, boolean> = {};
+  confirmingDeleteId: number | null = null;
 
   get canManageProjects(): boolean {
     return this.auth.hasAnyRole('Lead', 'Admin');
@@ -296,8 +315,7 @@ export class ProjectsComponent implements OnInit {
 
   deleteProject(p: Project) {
     if (!this.canManageProjects) { this.error = 'Bu işlem için yetkin yok.'; return; }
-    if (!confirm(`"${p.name}" projesini silmek istiyor musun?`)) return;
-
+    this.confirmingDeleteId = null;
     this.error = '';
     this.deleting[p.id] = true;
     const prev = this.projects;

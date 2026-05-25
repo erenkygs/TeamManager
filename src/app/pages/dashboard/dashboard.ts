@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -36,6 +36,24 @@ type DashboardSummary = {
   @if (error) { <div class="err-box">{{ error }}</div> }
 
   @if (data; as d) {
+
+    <!-- Üyelik süresi banner -->
+    @if (memberSince) {
+      <div class="member-banner">
+        <div class="member-left">
+          <div class="member-avatar">{{ nameInitial }}</div>
+          <div>
+            <div class="member-hello">Hoş geldin, <strong>{{ memberName }}</strong> 👋</div>
+            <div class="member-since">{{ memberRole }} · {{ memberSince }} tarihinden beri üyesin</div>
+          </div>
+        </div>
+        <div class="member-duration">
+          <div class="member-dur-val">{{ sessionTime }}</div>
+          <div class="member-dur-label">bu oturumda geçen süre</div>
+        </div>
+      </div>
+    }
+
     <div class="top-grid">
 
       <!-- Tamamlanma yüzdesi halkası -->
@@ -98,6 +116,53 @@ type DashboardSummary = {
       </div>
     </div>
 
+    <!-- Çevrimiçi süre tablosu (Admin/Lead) -->
+    @if (canSeeReport) {
+      <div class="card session-card">
+        <div class="session-head">
+          <div class="card-title" style="margin:0">Kullanıcı Çevrimiçi Süreleri</div>
+          <div class="day-tabs">
+            @for (opt of dayOpts; track opt) {
+              <button type="button" class="day-tab" [class.active]="reportDays === opt" (click)="setReportDays(opt)">
+                Son {{ opt }} gün
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="report-content" [class.report-fading]="reportLoading">
+          @if (sessionReport.length === 0 && !reportLoading) {
+            <div class="muted small" style="padding:8px 0">Henüz oturum verisi yok.</div>
+          } @else if (sessionReport.length === 0 && reportLoading) {
+            <div class="report-skeleton">
+              @for (i of [1,2,3,4,5]; track i) {
+                <div class="skeleton-row"></div>
+              }
+            </div>
+          } @else {
+            <div class="report-table">
+              <div class="report-header">
+                <div>Kullanıcı</div>
+                <div>Tarih</div>
+                <div>Süre</div>
+                <div>Durum</div>
+              </div>
+              @for (row of sessionReport; track row.userId + row.date) {
+                <div class="report-row">
+                  <div class="report-name">{{ row.userName }}</div>
+                  <div class="report-date">{{ row.date }}</div>
+                  <div class="report-dur">{{ fmtDuration(row.totalMinutes) }}</div>
+                  <div class="report-bar-wrap">
+                    <div class="report-bar" [style.width.%]="barPct(row.totalMinutes)"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Son 7 gün + Liderlik -->
     <div class="bottom-grid">
       <div class="card bottom-card">
@@ -151,6 +216,81 @@ type DashboardSummary = {
 </div>
 `,
   styles: [`
+/* ── Member banner ── */
+.member-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09);
+  margin-bottom: 14px;
+  animation: card-in .4s cubic-bezier(.22,.68,0,1.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.member-banner::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 1px);
+  background: radial-gradient(400px 120px at 0% 50%, rgba(124,92,255,.10), transparent 65%);
+  pointer-events: none;
+}
+
+.member-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.member-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.member-hello {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.member-since {
+  font-size: 12px;
+  opacity: .5;
+  margin-top: 3px;
+}
+
+.member-duration {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.member-dur-val {
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.member-dur-label {
+  font-size: 12px;
+  opacity: .5;
+  margin-top: 3px;
+}
+
 /* ── Top grid ── */
 .top-grid {
   display: grid;
@@ -305,6 +445,114 @@ type DashboardSummary = {
   z-index: 1;
 }
 
+/* ── Session report ── */
+.session-card {
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  animation: card-in .4s cubic-bezier(.22,.68,0,1.2) .1s both;
+}
+
+.session-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.day-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.day-tab {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.day-tab:hover  { background: rgba(255,255,255,.09); }
+.day-tab.active { background: rgba(124,92,255,.22); border-color: rgba(124,92,255,.45); }
+
+.report-content {
+  transition: opacity 0.18s ease;
+  min-height: 120px;
+}
+
+.report-fading {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.report-skeleton {
+  display: grid;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.skeleton-row {
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.05);
+  animation: skel-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes skel-pulse {
+  from { opacity: 0.4; }
+  to   { opacity: 0.8; }
+}
+
+.report-table { display: grid; gap: 4px; }
+
+.report-header {
+  display: grid;
+  grid-template-columns: 160px 110px 90px 1fr;
+  gap: 10px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: .45;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.report-row {
+  display: grid;
+  grid-template-columns: 160px 110px 90px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background .15s;
+}
+
+.report-row:hover { background: rgba(255,255,255,.04); }
+
+.report-name { font-weight: 700; font-size: 14px; }
+.report-date { font-size: 13px; opacity: .6; }
+.report-dur  { font-weight: 700; font-size: 13px; color: rgba(124,200,255,.9); }
+
+.report-bar-wrap {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  overflow: hidden;
+}
+
+.report-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+}
+
 /* ── Bottom grid ── */
 .bottom-grid {
   display: grid;
@@ -416,10 +664,27 @@ type DashboardSummary = {
 }
 `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   data: DashboardSummary | null = null;
   loading = false;
   error = '';
+
+  memberSince = '';
+  memberDays = 0;
+  memberName = '';
+  memberRole = '';
+  nameInitial = '';
+  sessionTime = '00:00:00';
+
+  canSeeReport = false;
+  reportDays = 7;
+  reportLoading = false;
+  sessionReport: { userId: number; userName: string; date: string; totalMinutes: number }[] = [];
+  readonly dayOpts = [7, 14, 30];
+
+  private timerInterval?: ReturnType<typeof setInterval>;
+  private reportInterval?: ReturnType<typeof setInterval>;
+  private baseElapsed = 0;
 
   constructor(
     private http: HttpClient,
@@ -428,7 +693,52 @@ export class DashboardComponent implements OnInit {
     private cd: ChangeDetectorRef
   ) {}
 
+  ngOnDestroy(): void {
+    clearInterval(this.timerInterval);
+    clearInterval(this.reportInterval);
+  }
+
+  private startSessionTimer(): void {
+    if (!sessionStorage.getItem('tm_session_start')) {
+      sessionStorage.setItem('tm_session_start', String(Date.now()));
+    }
+    this.baseElapsed = this.auth.getSessionElapsed();
+    const startedAt = Date.now();
+    const tick = () => {
+      const diff = this.baseElapsed + Math.floor((Date.now() - startedAt) / 1000);
+      const h = Math.floor(diff / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const s = diff % 60;
+      this.sessionTime = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      this.cd.detectChanges();
+    };
+    tick();
+    this.timerInterval = setInterval(tick, 1000);
+  }
+
   ngOnInit(): void {
+    this.startSessionTimer();
+    this.canSeeReport = this.auth.hasAnyRole('Admin', 'Lead');
+    if (this.canSeeReport) {
+      this.loadSessionReport();
+      this.reportInterval = setInterval(() => this.loadSessionReport(), 60_000);
+    }
+    this.http.get<any>(`${environment.apiUrl}/api/users/me`).subscribe({
+      next: (me) => {
+        this.memberName = me.name || me.email || 'Kullanıcı';
+        this.nameInitial = this.memberName.charAt(0).toUpperCase();
+        const roleMap: Record<string, string> = { Admin: 'Admin', Lead: 'Lider', Junior: 'Junior' };
+        this.memberRole = roleMap[me.role] ?? me.role ?? '';
+        if (me.createdAt) {
+          const joined = new Date(me.createdAt);
+          this.memberSince = joined.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+          this.memberDays = Math.floor((Date.now() - joined.getTime()) / 86_400_000);
+        }
+        this.cd.detectChanges();
+      },
+      error: () => {}
+    });
+
     this.loading = true;
     this.http.get<DashboardSummary>(`${environment.apiUrl}/api/dashboard/summary`).subscribe({
       next: (res) => {
@@ -458,6 +768,30 @@ export class DashboardComponent implements OnInit {
   get ringOffset(): number {
     const circumference = 2 * Math.PI * 80;
     return circumference - (this.completionPct / 100) * circumference;
+  }
+
+  setReportDays(d: number) {
+    this.reportDays = d;
+    this.loadSessionReport();
+  }
+
+  loadSessionReport() {
+    this.reportLoading = true;
+    this.http.get<any[]>(`${environment.apiUrl}/api/sessions/report?days=${this.reportDays}`).subscribe({
+      next: (rows) => { this.sessionReport = rows ?? []; this.reportLoading = false; this.cd.detectChanges(); },
+      error: () => { this.reportLoading = false; this.cd.detectChanges(); }
+    });
+  }
+
+  fmtDuration(minutes: number): string {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}s ${m}dk` : `${m}dk`;
+  }
+
+  barPct(minutes: number): number {
+    const max = Math.max(1, ...this.sessionReport.map(r => r.totalMinutes));
+    return Math.round((minutes / max) * 100);
   }
 
   barWidth(value: number): number {

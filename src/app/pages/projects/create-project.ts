@@ -13,7 +13,7 @@ import { HeaderComponent } from '../../layout/header.component';
   template: `
 <div class="container">
   <app-header title="Proje Ekle" subtitle="Yeni proje oluştur">
-    <button class="btn" (click)="back()">← Geri</button>
+    <button type="button" class="btn" (click)="back()">← Geri</button>
   </app-header>
 
   <div class="form-wrap">

@@ -9,12 +9,33 @@ export class AuthService {
     constructor(private http: HttpClient) { }
     login(email: string, password: string) {
         return this.http
-            .post<{ token: string }>(`${environment.apiUrl}/api/auth/login`, { email, password })
-            .pipe(tap(res => localStorage.setItem(this.tokenKey, res.token)));
+            .post<{ token: string; sessionId: number }>(`${environment.apiUrl}/api/auth/login`, { email, password })
+            .pipe(tap(res => {
+                localStorage.setItem(this.tokenKey, res.token);
+                localStorage.setItem('tm_session_id', String(res.sessionId));
+                sessionStorage.setItem('tm_session_start', String(Date.now()));
+                sessionStorage.removeItem('tm_session_saved');
+            }));
     }
 
     logout() {
+        const elapsed = this.getSessionElapsed();
+        sessionStorage.setItem('tm_session_saved', String(elapsed));
+        const sessionId = Number(localStorage.getItem('tm_session_id') ?? '0');
+        if (sessionId) {
+            this.http.post(`${environment.apiUrl}/api/auth/logout`, { sessionId }).subscribe({ error: () => {} });
+        }
         localStorage.removeItem(this.tokenKey);
+        localStorage.removeItem('tm_session_id');
+        sessionStorage.removeItem('tm_session_start');
+        sessionStorage.removeItem('tm_session_saved');
+    }
+
+    getSessionElapsed(): number {
+        const saved = Number(sessionStorage.getItem('tm_session_saved') ?? '0');
+        const start = Number(sessionStorage.getItem('tm_session_start') ?? '0');
+        const current = start ? Math.floor((Date.now() - start) / 1000) : 0;
+        return saved + current;
     }
 
     getToken(): string | null {

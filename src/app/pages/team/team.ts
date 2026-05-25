@@ -23,7 +23,7 @@ type TeamUser = {
 <div class="container">
   <app-header title="Ekip" subtitle="Ekip üyeleri">
     @if (canManageTeam) {
-      <button class="add-btn" (click)="addMember()">+ Çalışan Ekle</button>
+      <button type="button" class="add-btn" (click)="addMember()">+ Çalışan Ekle</button>
     }
   </app-header>
 
@@ -71,12 +71,16 @@ type TeamUser = {
             </div>
 
             @if (canDelete) {
-              <button class="del-btn"
-                      type="button"
-                      [disabled]="deleting[u.id]"
-                      (click)="deleteUser(u)">
-                {{ deleting[u.id] ? '…' : 'Sil' }}
-              </button>
+              @if (confirmingDeleteId !== u.id) {
+                <button type="button" class="del-btn"
+                        [disabled]="deleting[u.id]"
+                        (click)="confirmingDeleteId = u.id">
+                  Sil
+                </button>
+              } @else {
+                <button type="button" class="del-yes-btn" (click)="deleteUser(u)">Evet</button>
+                <button type="button" class="del-cancel-btn" (click)="confirmingDeleteId = null">Vazgeç</button>
+              }
             }
           </div>
         </div>
@@ -288,6 +292,23 @@ type TeamUser = {
 .del-btn:active   { transform: translateY(0); }
 .del-btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; }
 
+.del-yes-btn {
+  padding: 6px 14px; border-radius: 10px; border: none;
+  background: rgba(255,80,80,.8); color: #fff;
+  font-weight: 700; font-size: 13px; cursor: pointer;
+  transition: background .15s;
+}
+.del-yes-btn:hover { background: rgba(255,80,80,1); }
+
+.del-cancel-btn {
+  padding: 6px 14px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05); color: var(--text);
+  font-weight: 700; font-size: 13px; cursor: pointer;
+  transition: background .15s;
+}
+.del-cancel-btn:hover { background: rgba(255,255,255,.10); }
+
 /* ── Empty state ── */
 .empty-state {
   display: flex;
@@ -336,6 +357,7 @@ export class TeamComponent implements OnInit {
   error = '';
   canDelete = false;
   deleting: Record<number, boolean> = {};
+  confirmingDeleteId: number | null = null;
 
   get canManageTeam(): boolean { return this.auth.hasAnyRole('Admin', 'Lead'); }
 
@@ -390,8 +412,7 @@ export class TeamComponent implements OnInit {
 
   deleteUser(u: TeamUser): void {
     if (!this.canDelete) return;
-    if (!confirm(`${u.name || u.email || 'Kullanıcı'} silinsin mi?`)) return;
-
+    this.confirmingDeleteId = null;
     this.error = '';
     this.deleting[u.id] = true;
 

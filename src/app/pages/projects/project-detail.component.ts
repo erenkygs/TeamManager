@@ -36,7 +36,7 @@ type TaskVm = {
   <app-header
     [title]="project?.name || 'Proje'"
     [subtitle]="project?.description || ''">
-    <button class="back-btn" (click)="back()">← Projeler</button>
+    <button type="button" class="back-btn" (click)="back()">← Projeler</button>
   </app-header>
 
   @if (error) { <div class="err-box">{{ error }}</div> }
@@ -124,12 +124,16 @@ type TaskVm = {
                 {{ statusLabel(t.status) }}
               </div>
               @if (canManage) {
-                <button class="del-btn"
-                        type="button"
-                        [disabled]="deleting[t.id]"
-                        (click)="deleteTask(t)">
-                  {{ deleting[t.id] ? '…' : 'Sil' }}
-                </button>
+                @if (confirmingDeleteId !== t.id) {
+                  <button type="button" class="del-btn"
+                          [disabled]="deleting[t.id]"
+                          (click)="confirmingDeleteId = t.id">
+                    Sil
+                  </button>
+                } @else {
+                  <button type="button" class="del-yes-btn" (click)="deleteTask(t)">Evet</button>
+                  <button type="button" class="del-cancel-btn" (click)="confirmingDeleteId = null">Vazgeç</button>
+                }
               }
             </div>
           </div>
@@ -442,6 +446,23 @@ textarea.input { resize: vertical; min-height: 68px; }
 .del-btn:hover    { background: rgba(255,92,122,.18); transform: translateY(-1px); }
 .del-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 
+.del-yes-btn {
+  padding: 5px 12px; border-radius: 9px; border: none;
+  background: rgba(255,80,80,.8); color: #fff;
+  font-weight: 700; font-size: 12px; cursor: pointer;
+  transition: background .15s;
+}
+.del-yes-btn:hover { background: rgba(255,80,80,1); }
+
+.del-cancel-btn {
+  padding: 5px 12px; border-radius: 9px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05); color: var(--text);
+  font-weight: 700; font-size: 12px; cursor: pointer;
+  transition: background .15s;
+}
+.del-cancel-btn:hover { background: rgba(255,255,255,.10); }
+
 /* ── Task controls ── */
 .task-controls {
   display: grid;
@@ -565,6 +586,7 @@ export class ProjectDetailComponent implements OnInit {
   draftAssignee: Record<number, number> = {};
   toast = { show: false, text: '' };
   deleting: Record<number, boolean> = {};
+  confirmingDeleteId: number | null = null;
 
   constructor(
     private http: HttpClient,
@@ -704,8 +726,7 @@ export class ProjectDetailComponent implements OnInit {
 
   deleteTask(t: TaskVm): void {
     if (!this.canManage) return;
-    if (!confirm(`"${t.title}" görevini silmek istiyor musun?`)) return;
-
+    this.confirmingDeleteId = null;
     this.error = '';
     this.deleting[t.id] = true;
 

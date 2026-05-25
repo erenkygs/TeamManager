@@ -68,7 +68,7 @@ type FilterPriority = 'all' | 'Critical' | 'High' | 'Medium' | 'Low';
     <div class="filter-bar">
       <div class="tab-group">
         @for (tab of statusTabs; track tab.val) {
-          <button class="tab-btn" [class.active]="filterStatus === tab.val"
+          <button type="button" class="tab-btn" [class.active]="filterStatus === tab.val"
                   (click)="filterStatus = tab.val; applyFilter()">
             {{ tab.label }}
           </button>
@@ -77,7 +77,7 @@ type FilterPriority = 'all' | 'Critical' | 'High' | 'Medium' | 'Low';
 
       <div class="priority-group">
         @for (p of priorityOpts; track p.val) {
-          <button class="prio-btn" [class.active]="filterPriority === p.val"
+          <button type="button" class="prio-btn" [class.active]="filterPriority === p.val"
                   [class]="filterPriority === p.val ? 'prio-btn active prio-' + p.val : 'prio-btn prio-' + p.val"
                   (click)="filterPriority = p.val; applyFilter()">
             {{ p.label }}
@@ -108,7 +108,7 @@ type FilterPriority = 'all' | 'Critical' | 'High' | 'Medium' | 'Low';
                 <div class="task-desc muted small">{{ t.description }}</div>
               }
               <div class="task-meta">
-                <button class="proj-link" (click)="goProject(t.projectId)">
+                <button type="button" class="proj-link" (click)="goProject(t.projectId)">
                   📁 {{ t.projectName }}
                 </button>
                 @if (t.dueDate) {
@@ -135,7 +135,7 @@ type FilterPriority = 'all' | 'Critical' | 'High' | 'Medium' | 'Low';
             <span class="ctrl-label">Durumu güncelle</span>
             <div class="status-btns">
               @for (s of statusOpts; track s.val) {
-                <button class="status-btn" [class.active]="t.status === s.val"
+                <button type="button" class="status-btn" [class.active]="t.status === s.val"
                         [class]="statusBtnCls(s.val, t.status)"
                         [disabled]="t.status === s.val || changing[t.id]"
                         (click)="changeStatus(t, s.val)">

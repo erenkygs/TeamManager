@@ -46,13 +46,17 @@ type TaskComment = {
             <span class="muted small">{{ c.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
           </div>
 
-          <button *ngIf="canDelete(c)"
-                  class="btn danger"
-                  type="button"
-                  (click)="remove(c)"
-                  [disabled]="deleting[c.id]">
-            {{ deleting[c.id] ? 'Siliniyor…' : 'Sil' }}
-          </button>
+          <ng-container *ngIf="canDelete(c)">
+            <ng-container *ngIf="confirmingDeleteId !== c.id">
+              <button type="button" class="btn danger"
+                      (click)="confirmingDeleteId = c.id"
+                      [disabled]="deleting[c.id]">Sil</button>
+            </ng-container>
+            <ng-container *ngIf="confirmingDeleteId === c.id">
+              <button type="button" class="btn danger" (click)="remove(c)">Evet</button>
+              <button type="button" class="btn" (click)="confirmingDeleteId = null">Vazgeç</button>
+            </ng-container>
+          </ng-container>
         </div>
 
         <div style="margin-top:6px;white-space:pre-wrap;">
@@ -126,6 +130,7 @@ export class TaskCommentsComponent implements OnChanges {
     error = '';
     newContent = '';
     deleting: Record<number, boolean> = {};
+    confirmingDeleteId: number | null = null;
 
     constructor(
         private http: HttpClient,
@@ -238,8 +243,7 @@ export class TaskCommentsComponent implements OnChanges {
 
     remove(c: TaskComment): void {
         if (!this.canDelete(c)) { this.error = 'Bu işlem için yetkin yok.'; return; }
-        if (!confirm('Bu yorumu silmek istiyor musun?')) return;
-
+        this.confirmingDeleteId = null;
         this.error = '';
         this.deleting[c.id] = true;
         this.cd.detectChanges();
