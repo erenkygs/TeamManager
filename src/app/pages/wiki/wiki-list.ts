@@ -22,7 +22,9 @@ type WikiItem = {
   template: `
 <div class="container">
   <app-header title="Wiki" subtitle="Ekip bilgi tabanı">
-    <button type="button" class="new-btn" (click)="goNew()">+ Yeni Makale</button>
+    @if (!loading && articles.length > 0) {
+      <button type="button" class="new-btn" (click)="goNew()">+ Yeni Makale</button>
+    }
   </app-header>
 
   @if (loading) {

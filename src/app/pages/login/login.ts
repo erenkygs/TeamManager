@@ -65,7 +65,7 @@ type LoginResponse = { token: string; sessionId?: number };
         </button>
 
         <div class="muted small footer">Devam ederek kullanım koşullarını kabul etmiş olursun.</div>
-        <div class="login-version">Helivex v{{ environment.version }}</div>
+        <div class="login-version" (click)="changelogOpen = true">Helivex v{{ environment.version }}</div>
       </form>
       }
 
@@ -118,13 +118,41 @@ type LoginResponse = { token: string; sessionId?: number };
           @if (loading)  { <span>Güncelleniyor…</span> }
         </button>
 
-        <div class="login-version">Helivex v{{ environment.version }}</div>
+        <div class="login-version" (click)="changelogOpen = true">Helivex v{{ environment.version }}</div>
       </form>
       }
 
     </div>
   </div>
 </div>
+
+<!-- ── CHANGELOG MODAL ── -->
+@if (changelogOpen) {
+<div class="cl-backdrop" (click)="changelogOpen = false">
+  <div class="cl-modal card" (click)="$event.stopPropagation()">
+    <div class="cl-head">
+      <div class="cl-title">Sürüm Notları</div>
+      <button type="button" class="cl-close" (click)="changelogOpen = false">✕</button>
+    </div>
+    <div class="cl-body">
+      @for (v of changelog; track v.version) {
+        <div class="cl-entry" [class.latest]="$first">
+          <div class="cl-ver-row">
+            <span class="cl-ver">v{{ v.version }}</span>
+            @if ($first) { <span class="cl-badge">Güncel</span> }
+            <span class="cl-date">{{ v.date }}</span>
+          </div>
+          <ul class="cl-list">
+            @for (item of v.items; track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}
 `,
   styles: [`
 .auth-shell {
@@ -374,6 +402,128 @@ label {
   font-size: 12px;
   opacity: .5;
   letter-spacing: .5px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.login-version:hover { opacity: .85; }
+
+/* ── CHANGELOG MODAL ── */
+.cl-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+  animation: cl-fade-in .18s ease;
+}
+
+@keyframes cl-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cl-modal {
+  width: min(440px, 92vw);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  animation: cl-slide-in .22s cubic-bezier(.22,.68,0,1.2);
+}
+
+@keyframes cl-slide-in {
+  from { opacity: 0; transform: translateY(16px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  flex-shrink: 0;
+}
+
+.cl-title { font-weight: 900; font-size: 15px; }
+
+.cl-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  transition: background .15s;
+}
+.cl-close:hover { background: rgba(255,255,255,.12); }
+
+.cl-body {
+  overflow-y: auto;
+  padding: 14px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cl-entry {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.03);
+}
+
+.cl-entry.latest {
+  border-color: rgba(124,92,255,.3);
+  background: rgba(124,92,255,.07);
+}
+
+.cl-ver-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.cl-ver {
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.cl-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #fff;
+  letter-spacing: .4px;
+}
+
+.cl-date {
+  font-size: 11px;
+  opacity: .4;
+  margin-left: auto;
+}
+
+.cl-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cl-list li {
+  font-size: 13px;
+  opacity: .75;
+  line-height: 1.5;
 }
 `]
 })
@@ -395,8 +545,42 @@ export class LoginComponent {
 
   mode: 'login' | 'change' = 'login';
   exiting = false;
+  changelogOpen = false;
 
   environment = environment;
+
+  readonly changelog = [
+    {
+      version: '0.3.0 Beta',
+      date: 'Mayıs 2026',
+      items: [
+        'Oturum süresi artık uygulama kapatılınca otomatik sonlandırılıyor',
+        'Raporda oturum süreleri maksimum 8 saat ile sınırlandırıldı',
+        'Wiki modülü yönlendirme hataları giderildi',
+        'Versiyon notları paneli eklendi',
+      ]
+    },
+    {
+      version: '0.2.0 Beta',
+      date: 'Mayıs 2026',
+      items: [
+        'Wiki modülü eklendi (makale oluşturma, düzenleme, silme)',
+        'Navigasyon ve yönlendirme hataları düzeltildi',
+        'Bildirim paneli iyileştirmeleri',
+        'Genel arayüz güncellemeleri',
+      ]
+    },
+    {
+      version: '0.1.0 Beta',
+      date: 'Nisan 2026',
+      items: [
+        'İlk beta sürümü yayınlandı',
+        'Proje ve görev yönetimi',
+        'Ekip yönetimi ve rol sistemi',
+        'Oturum takibi ve raporlama',
+      ]
+    },
+  ];
 
   constructor(
     private http: HttpClient,

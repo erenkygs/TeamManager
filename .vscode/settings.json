@@ -1,0 +1,9 @@
+{
+    "workbench.externalBrowser": "chrome",
+    "remote.portsAttributes": {
+        "4200": {
+            "onAutoForward": "openBrowser"
+        }
+    },
+    "typescript.tsdk": "node_modules/typescript/lib"
+}
