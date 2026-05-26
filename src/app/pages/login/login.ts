@@ -551,6 +551,17 @@ export class LoginComponent {
 
   readonly changelog = [
     {
+      version: '0.3.1 Beta',
+      date: 'Mayıs 2026',
+      items: [
+        'Durum Akışı eklendi: ekip üyeleri anlık durum paylaşabilir',
+        'Proje silme onayı kart üzeri animasyonlu overlay ile yenilendi',
+        'Wiki makale formu Enter tuşu uyarı sesini giderdik',
+        'Wiki listesinde "Yeni Makale" butonu yalnızca makale varken gösteriliyor',
+        'Helivex → TeamManager marka güncellemesi',
+      ]
+    },
+    {
       version: '0.3.0 Beta',
       date: 'Mayıs 2026',
       items: [
