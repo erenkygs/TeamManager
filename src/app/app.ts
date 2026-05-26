@@ -10,19 +10,26 @@ import { environment } from '../environments/environment';
 })
 export class App implements OnInit {
   ngOnInit() {
-    window.addEventListener('beforeunload', () => {
-      const sessionId = Number(localStorage.getItem('tm_session_id') ?? '0');
-      const token = localStorage.getItem('tm_token');
-      if (!sessionId || !token) return;
-      fetch(`${environment.apiUrl}/api/auth/logout`, {
+    const token = localStorage.getItem('tm_token');
+    if (!token) return;
+
+    // sessionStorage F5'te korunur, sekme kapanınca silinir.
+    // Eğer tm_session_start varsa → F5 (reload), mevcut oturumu koru.
+    // Yoksa → yeni sekme / ilk açılış, yeni oturum başlat.
+    if (!sessionStorage.getItem('tm_session_start')) {
+      fetch(`${environment.apiUrl}/api/auth/start-session`, {
         method: 'POST',
-        keepalive: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ sessionId })
-      });
-    });
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.sessionId) {
+          localStorage.setItem('tm_session_id', String(data.sessionId));
+          sessionStorage.setItem('tm_session_start', String(Date.now()));
+          sessionStorage.removeItem('tm_session_saved');
+        }
+      })
+      .catch(() => {});
+    }
   }
 }

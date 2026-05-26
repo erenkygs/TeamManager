@@ -231,7 +231,7 @@ export class WikiListComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        if (err?.status === 401) { this.auth.logout(); this.router.navigateByUrl('/login'); return; }
+        if (err?.status === 401) { this.auth.logout(); this.router.navigateByUrl('/login'); }
         this.cd.detectChanges();
       }
     });
