@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -7,6 +8,7 @@ import { HeaderComponent } from '../../layout/header.component';
 
 type LeaderItem = { userId: number; name: string | null; email: string | null; completed: number };
 type DayItem = { date: string; completed: number };
+type StatusPost = { id: number; userId: number; userName: string | null; message: string; createdAt: string };
 
 type DashboardSummary = {
   totalTasks: number;
@@ -23,7 +25,7 @@ type DashboardSummary = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [HeaderComponent],
+  imports: [HeaderComponent, FormsModule],
   template: `
 <div class="container">
   <app-header title="Ana Sayfa" subtitle="Genel özet"></app-header>
@@ -162,6 +164,55 @@ type DashboardSummary = {
         </div>
       </div>
     }
+
+    <!-- Durum Akışı -->
+    <div class="card feed-card">
+      <div class="feed-head">
+        <div class="card-title" style="margin:0">Durum Akışı</div>
+        <span class="feed-live">● canlı</span>
+      </div>
+
+      <form class="feed-form" (ngSubmit)="postStatus()">
+        <input
+          class="feed-input"
+          type="text"
+          [(ngModel)]="newStatus"
+          name="newStatus"
+          placeholder="Günaydın! / #3 görevi inceliyorum…"
+          maxlength="120"
+          autocomplete="off" />
+        <div class="feed-form-row">
+          <span class="feed-char" [class.feed-char-warn]="newStatus.length > 100">{{ newStatus.length }}/120</span>
+          <button type="submit" class="feed-btn" [disabled]="!newStatus.trim() || posting">
+            {{ posting ? '…' : 'Paylaş' }}
+          </button>
+        </div>
+      </form>
+
+      <div class="feed-list">
+        @if (feedLoading && statusPosts.length === 0) {
+          <div class="feed-empty muted small">Yükleniyor…</div>
+        } @else if (statusPosts.length === 0) {
+          <div class="feed-empty muted small">Henüz durum paylaşılmamış. İlk sen paylaş! 👋</div>
+        } @else {
+          @for (p of statusPosts; track p.id) {
+            <div class="feed-item" [class.feed-own]="p.userId === currentUserId">
+              <div class="feed-av">{{ initial(p.userName) }}</div>
+              <div class="feed-body">
+                <div class="feed-meta">
+                  <span class="feed-name">{{ p.userName || 'Kullanıcı' }}</span>
+                  <span class="feed-time">{{ timeAgo(p.createdAt) }}</span>
+                </div>
+                <div class="feed-msg">{{ p.message }}</div>
+              </div>
+              @if (p.userId === currentUserId || isAdmin) {
+                <button type="button" class="feed-del" title="Sil" (click)="deletePost(p.id)">✕</button>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
 
     <!-- Son 7 gün + Liderlik -->
     <div class="bottom-grid">
@@ -553,6 +604,148 @@ type DashboardSummary = {
   transition: width .8s cubic-bezier(.4,0,.2,1);
 }
 
+/* ── Feed ── */
+.feed-card {
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  animation: card-in .4s cubic-bezier(.22,.68,0,1.2) .15s both;
+}
+
+.feed-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.feed-live {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(80,220,140,.85);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .4; }
+}
+
+.feed-form { display: grid; gap: 6px; margin-bottom: 16px; }
+
+.feed-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.11);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.feed-input:focus {
+  background: rgba(255,255,255,.09);
+  border-color: rgba(120,90,255,.5);
+  box-shadow: 0 0 0 3px rgba(120,90,255,.12);
+}
+.feed-input::placeholder { opacity: .35; }
+
+.feed-form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feed-char { font-size: 11px; opacity: .35; }
+.feed-char-warn { color: #ffaa55; opacity: 1; }
+
+.feed-btn {
+  padding: 7px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .15s, opacity .15s;
+}
+.feed-btn:hover:not(:disabled)  { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(120,90,255,.35); }
+.feed-btn:active:not(:disabled) { transform: translateY(0); }
+.feed-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.feed-list { display: grid; gap: 8px; }
+
+.feed-empty { padding: 8px 0; }
+
+.feed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  animation: feed-in .3s cubic-bezier(.22,.68,0,1.2) both;
+  transition: background .15s, border-color .15s;
+}
+.feed-item:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.10); }
+.feed-own { border-color: rgba(120,90,255,.22); background: rgba(120,90,255,.07); }
+
+@keyframes feed-in {
+  from { opacity: 0; transform: translateY(-8px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.feed-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.feed-body { flex: 1; min-width: 0; }
+
+.feed-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.feed-name { font-size: 13px; font-weight: 800; }
+.feed-time { font-size: 11px; opacity: .4; }
+
+.feed-msg {
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.feed-del {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: opacity .15s, background .15s;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.feed-item:hover .feed-del { opacity: .4; }
+.feed-del:hover { opacity: 1 !important; background: rgba(255,80,80,.15); color: #ff8099; }
+
 /* ── Bottom grid ── */
 .bottom-grid {
   display: grid;
@@ -682,8 +875,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   sessionReport: { userId: number; userName: string; date: string; totalMinutes: number }[] = [];
   readonly dayOpts = [7, 14, 30];
 
+  statusPosts: StatusPost[] = [];
+  newStatus = '';
+  posting = false;
+  feedLoading = false;
+  currentUserId = 0;
+  isAdmin = false;
+
   private timerInterval?: ReturnType<typeof setInterval>;
   private reportInterval?: ReturnType<typeof setInterval>;
+  private feedInterval?: ReturnType<typeof setInterval>;
   private baseElapsed = 0;
 
   constructor(
@@ -696,6 +897,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     clearInterval(this.timerInterval);
     clearInterval(this.reportInterval);
+    clearInterval(this.feedInterval);
   }
 
   private startSessionTimer(): void {
@@ -727,6 +929,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: (me) => {
         this.memberName = me.name || me.email || 'Kullanıcı';
         this.nameInitial = this.memberName.charAt(0).toUpperCase();
+        this.currentUserId = me.id ?? 0;
+        this.isAdmin = me.role === 'Admin';
         const roleMap: Record<string, string> = { Admin: 'Admin', Lead: 'Lider', Junior: 'Junior' };
         this.memberRole = roleMap[me.role] ?? me.role ?? '';
         if (me.createdAt) {
@@ -738,6 +942,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
+
+    this.loadFeed();
+    this.feedInterval = setInterval(() => this.loadFeed(), 30_000);
 
     this.loading = true;
     this.http.get<DashboardSummary>(`${environment.apiUrl}/api/dashboard/summary`).subscribe({
@@ -797,5 +1004,47 @@ export class DashboardComponent implements OnInit, OnDestroy {
   barWidth(value: number): number {
     const max = Math.max(1, ...(this.data?.completedLast7Days?.map(x => x.completed) ?? [1]));
     return Math.min(100, Math.round((value / max) * 100));
+  }
+
+  loadFeed(): void {
+    this.feedLoading = true;
+    this.http.get<StatusPost[]>(`${environment.apiUrl}/api/status-posts`).subscribe({
+      next: (posts) => { this.statusPosts = posts ?? []; this.feedLoading = false; this.cd.detectChanges(); },
+      error: () => { this.feedLoading = false; this.cd.detectChanges(); }
+    });
+  }
+
+  postStatus(): void {
+    const msg = this.newStatus.trim();
+    if (!msg || this.posting) return;
+    this.posting = true;
+    this.http.post<StatusPost>(`${environment.apiUrl}/api/status-posts`, { message: msg }).subscribe({
+      next: (p) => {
+        this.statusPosts = [p, ...this.statusPosts].slice(0, 50);
+        this.newStatus = '';
+        this.posting = false;
+        this.cd.detectChanges();
+      },
+      error: () => { this.posting = false; this.cd.detectChanges(); }
+    });
+  }
+
+  deletePost(id: number): void {
+    this.http.delete(`${environment.apiUrl}/api/status-posts/${id}`).subscribe({
+      next: () => { this.statusPosts = this.statusPosts.filter(p => p.id !== id); this.cd.detectChanges(); },
+      error: () => {}
+    });
+  }
+
+  initial(name: string | null): string {
+    return (name || '?').trim().charAt(0).toUpperCase();
+  }
+
+  timeAgo(iso: string): string {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60)  return 'Az önce';
+    if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`;
+    return new Date(iso).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
   }
 }

@@ -41,7 +41,7 @@ type Project = {
   @if (projects.length) {
     <div class="proj-grid">
       @for (p of projects; track p.id; let i = $index) {
-        <div class="card proj-card" [style.animation-delay]="(i * 0.06) + 's'">
+        <div class="card proj-card" [class.is-confirming]="confirmingDeleteId === p.id" [style.animation-delay]="(i * 0.06) + 's'">
           <div class="proj-header">
             <div class="proj-name">{{ p.name }}</div>
             <div class="proj-icon">🗂️</div>
@@ -55,22 +55,29 @@ type Project = {
             <div class="proj-date muted small">{{ fmt(p.createdAt) }}</div>
             <div class="proj-actions">
               @if (canManageProjects) {
-                @if (confirmingDeleteId !== p.id) {
-                  <button type="button" class="action-btn del-btn"
-                          (click)="confirmingDeleteId = p.id"
-                          [disabled]="deleting[p.id]">
-                    Sil
-                  </button>
-                } @else {
-                  <button type="button" class="action-btn del-yes-btn" (click)="deleteProject(p)">Evet, Sil</button>
-                  <button type="button" class="action-btn cancel-btn2" (click)="confirmingDeleteId = null">Vazgeç</button>
-                }
+                <button type="button" class="action-btn del-btn"
+                        (click)="confirmingDeleteId = p.id"
+                        [disabled]="deleting[p.id]">
+                  Sil
+                </button>
               }
               <button type="button" class="action-btn detail-btn" (click)="openProject(p.id)">
                 Detay →
               </button>
             </div>
           </div>
+
+          @if (confirmingDeleteId === p.id) {
+            <div class="del-overlay">
+              <div class="del-trash">🗑️</div>
+              <div class="del-msg">Bu proje silinecek!</div>
+              <div class="del-sub muted small">Bu işlem geri alınamaz.</div>
+              <div class="del-btns">
+                <button type="button" class="del-cancel" (click)="confirmingDeleteId = null">Vazgeç</button>
+                <button type="button" class="del-confirm" (click)="deleteProject(p)">Evet, Sil</button>
+              </div>
+            </div>
+          }
         </div>
       }
     </div>
@@ -208,18 +215,93 @@ type Project = {
 }
 .del-btn:hover { background: rgba(255,92,122,.18); box-shadow: 0 4px 14px rgba(255,92,122,.2); }
 
-.del-yes-btn {
-  background: rgba(255,80,80,.8);
-  border-color: transparent;
-  color: #fff;
+/* ── Delete overlay ── */
+.is-confirming {
+  border-color: rgba(255,60,95,.4) !important;
+  box-shadow: 0 0 0 1px rgba(255,60,95,.25), 0 12px 40px rgba(255,60,95,.18) !important;
 }
-.del-yes-btn:hover { background: rgba(255,80,80,1); }
 
-.cancel-btn2 {
-  background: rgba(255,255,255,.05);
-  border-color: rgba(255,255,255,.12);
+.del-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius, 16px);
+  background: rgba(10,8,18,.88);
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 10;
+  animation: del-pop .28s cubic-bezier(.22,.68,0,1.25) both;
 }
-.cancel-btn2:hover { background: rgba(255,255,255,.10); }
+
+@keyframes del-pop {
+  from { opacity: 0; transform: scale(.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.del-trash {
+  font-size: 38px;
+  animation: del-shake .55s cubic-bezier(.36,.07,.19,.97) .05s both;
+}
+
+@keyframes del-shake {
+  0%,100% { transform: rotate(0) scale(1); }
+  20%     { transform: rotate(-14deg) scale(1.18); }
+  45%     { transform: rotate(13deg) scale(1.22); }
+  65%     { transform: rotate(-8deg) scale(1.14); }
+  80%     { transform: rotate(5deg); }
+}
+
+.del-msg {
+  font-size: 15px;
+  font-weight: 900;
+  color: #ff8099;
+  margin-top: 2px;
+}
+
+.del-sub { margin-bottom: 6px; }
+
+.del-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.del-cancel {
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.07);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, transform .12s;
+}
+.del-cancel:hover { background: rgba(255,255,255,.13); transform: translateY(-1px); }
+
+.del-confirm {
+  padding: 9px 22px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #ff3c5f, #ff5e3a);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(255,60,95,.5);
+  animation: pulse-danger 1.8s ease-in-out infinite;
+  transition: transform .13s, box-shadow .15s;
+}
+.del-confirm:hover  { transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 28px rgba(255,60,95,.65); animation: none; }
+.del-confirm:active { transform: scale(.96); }
+
+@keyframes pulse-danger {
+  0%,100% { box-shadow: 0 4px 18px rgba(255,60,95,.5); }
+  50%      { box-shadow: 0 4px 28px rgba(255,60,95,.75), 0 0 0 5px rgba(255,60,95,.12); }
+}
 
 .detail-btn {
   background: rgba(31,111,255,.12);

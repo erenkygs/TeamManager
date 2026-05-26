@@ -65,7 +65,7 @@ type LoginResponse = { token: string; sessionId?: number };
         </button>
 
         <div class="muted small footer">Devam ederek kullanım koşullarını kabul etmiş olursun.</div>
-        <div class="login-version" (click)="changelogOpen = true">Helivex v{{ environment.version }}</div>
+        <div class="login-version" (click)="changelogOpen = true">TeamManager v{{ environment.version }}</div>
       </form>
       }
 
@@ -118,7 +118,7 @@ type LoginResponse = { token: string; sessionId?: number };
           @if (loading)  { <span>Güncelleniyor…</span> }
         </button>
 
-        <div class="login-version" (click)="changelogOpen = true">Helivex v{{ environment.version }}</div>
+        <div class="login-version" (click)="changelogOpen = true">TeamManager v{{ environment.version }}</div>
       </form>
       }
 
