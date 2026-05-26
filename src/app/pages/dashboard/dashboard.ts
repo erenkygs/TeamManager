@@ -944,7 +944,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
 
     this.loadFeed();
-    this.feedInterval = setInterval(() => this.loadFeed(), 30_000);
+    this.feedInterval = setInterval(() => this.loadFeed(), 5_000);
 
     this.loading = true;
     this.http.get<DashboardSummary>(`${environment.apiUrl}/api/dashboard/summary`).subscribe({
