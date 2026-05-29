@@ -556,7 +556,10 @@ export class LoginComponent {
       items: [
         'Durum Akışı eklendi: ekip üyeleri anlık durum paylaşabilir',
         'Proje silme onayı kart üzeri animasyonlu overlay ile yenilendi',
+        'Ana sayfaya versiyon etiketi eklendi',
+        'Bildirim rozeti nabız animasyonu ile yenilendi',
         'Helivex → TeamManager marka güncellemesi',
+        'Küçük arayüz tutarsızlıkları giderildi',
       ]
     },
     {
@@ -565,16 +568,31 @@ export class LoginComponent {
       items: [
         'Oturum süresi artık uygulama kapatılınca otomatik sonlandırılıyor',
         'Raporda oturum süreleri maksimum 8 saat ile sınırlandırıldı',
+        'Durum Akışı anlık güncelleme için polling süresi 5 saniyeye düşürüldü',
         'Versiyon notları paneli eklendi',
+        'F5 yenilemede yeni oturum oluşturma sorunu düzeltildi',
       ]
     },
     {
       version: '0.2.0 Beta',
       date: 'Mayıs 2026',
       items: [
+        'Görev detay sayfası ve yorum sistemi eklendi',
+        'Görev durumu sürükle-bırak yerine dropdown ile güncelleniyor',
+        'Bildirim paneli: okundu işareti ve toplu silme eklendi',
         'Navigasyon ve yönlendirme hataları düzeltildi',
-        'Bildirim paneli iyileştirmeleri',
-        'Genel arayüz güncellemeleri',
+        'Genel arayüz güncellemeleri ve animasyon iyileştirmeleri',
+      ]
+    },
+    {
+      version: '0.1.1 Beta',
+      date: 'Nisan 2026',
+      items: [
+        'Ekip üyesi davet akışı düzeltildi',
+        'Proje detay sayfasında görev filtreleme eklendi',
+        'Mobil uyumlu başlık ve gezinme çubuğu',
+        'Şifre değiştirme formu eklendi',
+        'Performans: büyük proje listelerinde yükleme hızı artırıldı',
       ]
     },
     {
@@ -583,8 +601,9 @@ export class LoginComponent {
       items: [
         'İlk beta sürümü yayınlandı',
         'Proje ve görev yönetimi',
-        'Ekip yönetimi ve rol sistemi',
+        'Ekip yönetimi ve rol sistemi (Admin, Lead, Junior)',
         'Oturum takibi ve raporlama',
+        'JWT tabanlı kimlik doğrulama',
       ]
     },
   ];
