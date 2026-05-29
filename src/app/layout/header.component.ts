@@ -74,7 +74,6 @@ import { interval, Subscription } from 'rxjs';
       <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/profile')"    (click)="goProfile()">Profilim</button>
       <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/team')"       (click)="goTeam()">Ekip</button>
       <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/my-tasks')"  (click)="goMyTasks()">Görevlerim</button>
-      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/wiki')"      (click)="goWiki()">Wiki</button>
     </nav>
 
     <button type="button" class="nav-btn logout-btn" (click)="logout()">Çıkış Yap</button>
@@ -460,8 +459,6 @@ export class HeaderComponent implements OnDestroy {
   goProfile()   { this.notiOpen = false; this.router.navigateByUrl('/profile'); }
   goTeam()      { this.notiOpen = false; this.router.navigateByUrl('/team'); }
   goMyTasks()   { this.notiOpen = false; this.router.navigateByUrl('/my-tasks'); }
-  goWiki()      { this.notiOpen = false; this.router.navigateByUrl('/wiki'); }
-
   logout() {
     this.pollSub?.unsubscribe();
     this.auth.logout();
