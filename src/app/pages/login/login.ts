@@ -556,8 +556,6 @@ export class LoginComponent {
       items: [
         'Durum Akışı eklendi: ekip üyeleri anlık durum paylaşabilir',
         'Proje silme onayı kart üzeri animasyonlu overlay ile yenilendi',
-        'Wiki makale formu Enter tuşu uyarı sesini giderdik',
-        'Wiki listesinde "Yeni Makale" butonu yalnızca makale varken gösteriliyor',
         'Helivex → TeamManager marka güncellemesi',
       ]
     },
@@ -567,7 +565,6 @@ export class LoginComponent {
       items: [
         'Oturum süresi artık uygulama kapatılınca otomatik sonlandırılıyor',
         'Raporda oturum süreleri maksimum 8 saat ile sınırlandırıldı',
-        'Wiki modülü yönlendirme hataları giderildi',
         'Versiyon notları paneli eklendi',
       ]
     },
@@ -575,7 +572,6 @@ export class LoginComponent {
       version: '0.2.0 Beta',
       date: 'Mayıs 2026',
       items: [
-        'Wiki modülü eklendi (makale oluşturma, düzenleme, silme)',
         'Navigasyon ve yönlendirme hataları düzeltildi',
         'Bildirim paneli iyileştirmeleri',
         'Genel arayüz güncellemeleri',

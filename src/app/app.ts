@@ -6,7 +6,7 @@ import { environment } from '../environments/environment';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet],
-  template: `<router-outlet></router-outlet><footer class="app-footer">v0.3.1</footer>`
+  template: `<router-outlet></router-outlet>`
 })
 export class App implements OnInit {
   ngOnInit() {
