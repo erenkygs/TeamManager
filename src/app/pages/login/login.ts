@@ -551,6 +551,15 @@ export class LoginComponent {
 
   readonly changelog = [
     {
+      version: '0.3.2 Beta',
+      date: 'Mayıs 2026',
+      items: [
+        'Bilgi Bankası eklendi: SSS formatında soru-cevap sistemi',
+        'Bilgi Bankası arama: soru veya cevap içinde anlık filtreleme',
+        'Tüm üyeler soru ekleyebilir; yazarlar ve yöneticiler düzenleyip silebilir',
+      ]
+    },
+    {
       version: '0.3.1 Beta',
       date: 'Mayıs 2026',
       items: [

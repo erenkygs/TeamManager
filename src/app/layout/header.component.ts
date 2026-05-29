@@ -73,7 +73,8 @@ import { interval, Subscription } from 'rxjs';
       <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/projects')"   (click)="goProjects()">Projeler</button>
       <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/profile')"    (click)="goProfile()">Profilim</button>
       <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/team')"       (click)="goTeam()">Ekip</button>
-      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/my-tasks')"  (click)="goMyTasks()">Görevlerim</button>
+      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/my-tasks')"   (click)="goMyTasks()">Görevlerim</button>
+      <button type="button" class="nav-btn" title="" [class.active]="currentUrl.startsWith('/knowledge')" (click)="goKnowledge()">Bilgi Bankası</button>
     </nav>
 
     <button type="button" class="nav-btn logout-btn" (click)="logout()">Çıkış Yap</button>
@@ -458,7 +459,8 @@ export class HeaderComponent implements OnDestroy {
   goProjects()  { this.notiOpen = false; this.router.navigateByUrl('/projects'); }
   goProfile()   { this.notiOpen = false; this.router.navigateByUrl('/profile'); }
   goTeam()      { this.notiOpen = false; this.router.navigateByUrl('/team'); }
-  goMyTasks()   { this.notiOpen = false; this.router.navigateByUrl('/my-tasks'); }
+  goMyTasks()    { this.notiOpen = false; this.router.navigateByUrl('/my-tasks'); }
+  goKnowledge()  { this.notiOpen = false; this.router.navigateByUrl('/knowledge'); }
   logout() {
     this.pollSub?.unsubscribe();
     this.auth.logout();

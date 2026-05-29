@@ -264,7 +264,7 @@ type DashboardSummary = {
       </div>
     </div>
   }
-  <footer class="app-footer">v0.3.1</footer>
+  <footer class="app-footer">v0.3.2</footer>
 </div>
 `,
   styles: [`

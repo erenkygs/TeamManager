@@ -49,5 +49,11 @@ export const routes: Routes = [
         loadComponent: () =>
             import('./pages/my-tasks/my-tasks').then(m => m.MyTasksComponent)
     },
-{ path: '**', redirectTo: '' }
+    {
+        path: 'knowledge',
+        canActivate: [authGuard],
+        loadComponent: () =>
+            import('./pages/knowledge/knowledge-base').then(m => m.KnowledgeBaseComponent)
+    },
+    { path: '**', redirectTo: '' }
 ];
