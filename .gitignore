@@ -9,6 +9,9 @@
 npm-debug.log
 yarn-error.log
 
+# Claude Code
+.claude/
+
 # IDEs and editors
 .idea/
 .project
